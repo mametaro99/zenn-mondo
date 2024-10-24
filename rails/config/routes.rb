@@ -6,10 +6,13 @@ Rails.application.routes.draw do
       mount_devise_token_auth_for "User", at: "auth"
 
       namespace :current do
+        resources :tests, only: [:index] do
+          resources :test_answers, only: [:index, :create], module: :tests
+        end
         resource :user, only: [:show]
       end
       resources :tests, only: [:index, :show] do
-        resources :questions, only: [:index ,:create]
+        resources :questions, only: [:index], module: :tests
       end
     end
   end
