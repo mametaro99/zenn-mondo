@@ -8,7 +8,9 @@ Rails.application.routes.draw do
       namespace :current do
         resource :user, only: [:show]
       end
-      resources :tests, only: [:index, :show]
+      resources :tests, only: [:index, :show] do
+        resources :questions, only: [:index ,:create]
+      end
     end
   end
 end
