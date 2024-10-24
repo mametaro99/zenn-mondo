@@ -1,6 +1,11 @@
 ja:
   activerecord:
     errors:
+      models:
+        user:
+          attributes:
+            email:
+              taken: "このEメールは既に使用されています"
       messages:
         blank: "を入力してください"
     attributes:
@@ -36,24 +41,3 @@ ja:
         question_id: 質問ID
         created_at: 作成日時
         updated_at: 更新日時
-
-      user:
-        provider: プロバイダー
-        uid: ユーザーID
-        encrypted_password: 暗号化パスワード
-        reset_password_token: リセットパスワードトークン
-        reset_password_sent_at: パスワードリセット送信日時
-        allow_password_change: パスワード変更許可
-        remember_created_at: ログイン記憶日時
-        confirmation_token: 確認トークン
-        confirmed_at: 確認日時
-        confirmation_sent_at: 確認送信日時
-        unconfirmed_email: 未確認のメールアドレス
-        name: 名前
-        nickname: ニックネーム
-        image: 画像
-        email: メールアドレス
-        tokens: トークン
-        created_at: 作成日時
-        updated_at: 更新日時
-
