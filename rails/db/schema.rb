@@ -10,7 +10,50 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_10_24_000528) do
+ActiveRecord::Schema[7.0].define(version: 2024_10_24_020427) do
+  create_table "questions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "test_id", null: false
+    t.string "question_text", null: false
+    t.boolean "isReversedScore", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["test_id"], name: "index_questions_on_test_id"
+  end
+
+  create_table "test_answer_details", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "test_answer_id", null: false
+    t.integer "score", null: false
+    t.bigint "question_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["question_id"], name: "index_test_answer_details_on_question_id"
+    t.index ["test_answer_id"], name: "index_test_answer_details_on_test_answer_id"
+  end
+
+  create_table "test_answers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "test_id", null: false
+    t.integer "count", null: false
+    t.datetime "timestamp"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["test_id"], name: "index_test_answers_on_test_id"
+    t.index ["user_id", "test_id", "count"], name: "index_test_answers_on_user_id_and_test_id_and_count", unique: true
+    t.index ["user_id"], name: "index_test_answers_on_user_id"
+  end
+
+  create_table "tests", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "title"
+    t.text "description"
+    t.string "site_url"
+    t.text "improvement_suggestion"
+    t.integer "min_score"
+    t.integer "max_score"
+    t.float "avg_score"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "provider", default: "email", null: false
     t.string "uid", default: "", null: false
@@ -36,4 +79,9 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_24_000528) do
     t.index ["uid", "provider"], name: "index_users_on_uid_and_provider", unique: true
   end
 
+  add_foreign_key "questions", "tests"
+  add_foreign_key "test_answer_details", "questions"
+  add_foreign_key "test_answer_details", "test_answers"
+  add_foreign_key "test_answers", "tests"
+  add_foreign_key "test_answers", "users"
 end
