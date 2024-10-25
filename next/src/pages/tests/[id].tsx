@@ -25,11 +25,17 @@ import MarkdownText from '@/components/MarkdownText'
 import { fetcher } from '@/utils'
 import React from 'react'
 
+type TestQuestionProps = {
+  id: number
+  questionText: string
+  isReversedScore: boolean
+}
+
 type TestProps = {
   id: number
   title: string
   description: string
-  site_url: string
+  siteUrl: string
   improvementSuggestion: string
   minScore: number
   maxScore: number
@@ -40,14 +46,14 @@ type TestProps = {
 
 type TestAnswerDetailProps = {
   score: number
-  question_id: number
+  questionId: number
 }
 
 type TestAnswerProps = {
   id: number
   timestamp: string
   average: number
-  test_answer_details: TestAnswerDetailProps[]
+  testAnswerDetails: TestAnswerDetailProps[]
 }
 
 const TestDetail: NextPage = () => {
@@ -60,16 +66,28 @@ const TestDetail: NextPage = () => {
   const { id } = router.query
   const testUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/tests/${id}`
   const userResultsUrl = id ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/current/tests/${id}/test_answers` : null
+  const questionsUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/tests/${id}/questions`
+
 
   const { data: testData, error: testError } = useSWR(testUrl, fetcher)
   const { data: resultData, error: resultError } = useSWR(userResultsUrl, fetcher)
-  console.log(resultData)
+  const { data: questionData, error: questionError } = useSWR(questionsUrl, fetcher)
+
   if (testError || resultError) return <Error />
   if (!testData || !resultData) return <Loading />
 
   const test: TestProps = camelcaseKeys(testData)
   const testAnswers: TestAnswerProps[] = camelcaseKeys(resultData)
+  const questions: TestQuestionProps[] = camelcaseKeys(questionData)
+
   console.log(test)
+
+  const getScoreChange = (current: number, previous: number) => {
+    if (current > previous) return <span style={{ color: 'blue' }}>↗</span>
+    if (current < previous) return <span style={{ color: 'red' }}>↘</span>
+    return ''
+  }
+  
   return (
     <Box sx={{ backgroundColor: '#EDF2F7', pb: 6, minHeight: 'calc(100vh - 57px)' }}>
       <Container maxWidth="lg">
@@ -85,7 +103,7 @@ const TestDetail: NextPage = () => {
           <Box sx={{ width: '100%' }}>
             {/* テスト受験リンク */}
             <Box sx={{ textAlign: 'center', mt: 4 }}>
-              <a href={`/tests/${id}/take`} style={{ textDecoration: 'none' }}>
+              <a href={`/tests/${id}/questionForm`} style={{ textDecoration: 'none' }}>
                 <Typography component="p" sx={{ fontSize: 18, fontWeight: 'bold', color: '#1976D2' }}>
                   テストを受験する
                 </Typography>
@@ -96,8 +114,6 @@ const TestDetail: NextPage = () => {
               <Box sx={{ padding: { xs: '0 24px 24px 24px', sm: '0 40px 40px 40px' }, marginTop: { xs: '24px', sm: '40px' } }}>
                 <MarkdownText content={`**説明:**\n\n${test.description}`} />
                 <MarkdownText content={`**改善案:**\n\n${test.improvementSuggestion}`} />
-                <Typography sx={{ mt: 2 }}>最小スコア: {test.minScore}</Typography>
-                <Typography>最大スコア: {test.maxScore}</Typography>
                 <Typography>平均スコア: {test.avgScore}</Typography>
                 <MarkdownText content={`**テスト URL:** [${test.siteUrl}](${test.siteUrl})`} />
               </Box>
@@ -106,31 +122,44 @@ const TestDetail: NextPage = () => {
             {/* 比較表 */}
             <Box sx={{ mt: 6 }}>
               <Typography component="h3" sx={{ fontSize: 20, fontWeight: 'bold', mb: 2 }}>
-                過去のテスト結果（期間ごとの比較）
+                あなたの過去のテスト結果（期間ごとの比較）
               </Typography>
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>日付</TableCell>
-                    <TableCell align="right">平均スコア</TableCell>
+                    <TableCell>質問名/回答日</TableCell>
+                    {testAnswers.map((answer, index) => (
+                      <TableCell key={index}>{new Date(answer.timestamp).toLocaleDateString()}</TableCell>
+                    ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {testAnswers.map((answer: TestAnswerProps, index: number) => (
-                    <React.Fragment key={index}>
-                      <TableRow>
-                        <TableCell component="th" scope="row" colSpan={2}>
-                          {new Date(answer.timestamp).toLocaleString()} - 平均スコア: {answer.average}
-                        </TableCell>
-                      </TableRow>
-                      {answer.test_answer_details.map((detail, detailIndex) => (
-                        <TableRow key={detailIndex}>
-                          <TableCell>質問 {detail.question_id}</TableCell>
-                          <TableCell align="right">{detail.score}</TableCell>
-                        </TableRow>
-                      ))}
-                    </React.Fragment>
+                  {questions.map((question) => (
+                    <TableRow key={question.id}>
+                      <TableCell>{question.questionText}</TableCell>
+                      {testAnswers.map((answer, index) => {
+                        console.log('Checking question.id:', question.id)
+                        console.log('answer.testAnswerDetails:', answer.testAnswerDetails)
+                        const detail = answer.testAnswerDetails.find((d) => d.question_id === question.id)
+
+                        return (
+                          <TableCell key={index}>
+                            {detail?.score}
+                          </TableCell>
+                        )
+                      })}
+                    </TableRow>
                   ))}
+                  {/* 平均スコアの行 */}
+                  <TableRow>
+                    <TableCell>平均点</TableCell>
+                    {testAnswers.map((answer, index) => (
+                      <TableCell key={index}>
+                        {answer.average}
+                        {index > 0 && getScoreChange(answer.average, testAnswers[index - 1].average)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
                 </TableBody>
               </Table>
             </Box>
