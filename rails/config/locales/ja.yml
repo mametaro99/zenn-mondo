@@ -8,6 +8,7 @@ ja:
               taken: "このEメールは既に使用されています"
       messages:
         blank: "を入力してください"
+        record_invalid: "無効なレコードです"  # 追加
     attributes:
       test:
         title: タイトル

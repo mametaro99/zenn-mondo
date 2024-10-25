@@ -75,21 +75,23 @@ const Header = () => {
                   >
                     Sign in
                   </Button>
-                  <Button
-                    color="primary"
-                    variant="outlined"
-                    sx={{
-                      textTransform: 'none',
-                      fontSize: 16,
-                      lineHeight: '27px',
-                      borderRadius: 2,
-                      boxShadow: 'none',
-                      border: '1.5px solid #3EA8FF',
-                      ml: 2,
-                    }}
-                  >
-                    Sign Up
-                  </Button>
+                  <Link href="/sign_up">
+                    <Button
+                      color="primary"
+                      variant="outlined"
+                      sx={{
+                        textTransform: 'none',
+                        fontSize: 16,
+                        lineHeight: '27px',
+                        borderRadius: 2,
+                        boxShadow: 'none',
+                        border: '1.5px solid #3EA8FF',
+                        ml: 2,
+                      }}
+                    >
+                      Sign Up
+                    </Button>
+                  </Link>
                 </Box>
               )}
               {user.isSignedIn && (
@@ -99,22 +101,6 @@ const Header = () => {
                        <PersonIcon />
                      </Avatar>
                    </IconButton>
-                   <Box sx={{ ml: 2 }}>
-                     <Button
-                       color="primary"
-                       variant="contained"
-                       sx={{
-                         color: 'white',
-                         textTransform: 'none',
-                         fontSize: 16,
-                         borderRadius: 2,
-                         width: 100,
-                         boxShadow: 'none',
-                       }}
-                     >
-                       Add new
-                     </Button>
-                   </Box>
                    <Menu
                      anchorEl={anchorEl}
                      id="account-menu"
@@ -128,12 +114,6 @@ const Header = () => {
                        </Typography>
                      </Box>
                      <Divider />
-                     <MenuItem>
-                       <ListItemIcon>
-                         <ArticleIcon fontSize="small" />
-                       </ListItemIcon>
-                       記事の管理
-                     </MenuItem>
                      <Link href="/sign_out">
                        <MenuItem>
                          <ListItemIcon>

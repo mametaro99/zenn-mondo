@@ -1,6 +1,3 @@
-import ArticleIcon from '@mui/icons-material/Article'
-import PersonIcon from '@mui/icons-material/Person'
-import UpdateIcon from '@mui/icons-material/Update'
 import {
   Box,
   Container,
@@ -14,6 +11,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Button,
 } from '@mui/material'
 import camelcaseKeys from 'camelcase-keys'
 import type { NextPage } from 'next'
@@ -24,6 +22,7 @@ import Loading from '@/components/Loading'
 import MarkdownText from '@/components/MarkdownText'
 import { fetcher } from '@/utils'
 import React from 'react'
+import AverageScoreChart from '@/components/AverageScoreChart'
 
 type TestQuestionProps = {
   id: number
@@ -87,6 +86,13 @@ const TestDetail: NextPage = () => {
     if (current < previous) return <span style={{ color: 'red' }}>↘</span>
     return ''
   }
+
+  const averages = testAnswers.map(answer => ({
+    date: new Date(answer.timestamp).toLocaleDateString(),
+    score: answer.average,
+  }));
+
+  const overallAvgScore = test.avgScore; // Overall average score
   
   return (
     <Box sx={{ backgroundColor: '#EDF2F7', pb: 6, minHeight: 'calc(100vh - 57px)' }}>
@@ -99,69 +105,71 @@ const TestDetail: NextPage = () => {
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: '0 24px' }}>
+        <Box sx={{ display: 'flex', gap: '0 24px'}}>
           <Box sx={{ width: '100%' }}>
             {/* テスト受験リンク */}
-            <Box sx={{ textAlign: 'center', mt: 4 }}>
+            <Box sx={{ textAlign: 'center', mt: 4, mb: 5}}>
               <a href={`/tests/${id}/questionForm`} style={{ textDecoration: 'none' }}>
-                <Typography component="p" sx={{ fontSize: 18, fontWeight: 'bold', color: '#1976D2' }}>
+                <Button component="p" sx={{ fontSize: 18, fontWeight: 'bold' }} color="primary" variant="contained" >
                   テストを受験する
-                </Typography>
+                </Button>
               </a>
             </Box>
 
-            <Card sx={{ boxShadow: 'none', borderRadius: '12px', maxWidth: 840, m: '0 auto' }}>
+            <AverageScoreChart averages={averages} overallAvgScore={overallAvgScore} title={test.title} />
+            {/* //中央に配置 */}
+            <Card sx={{ boxShadow: 'none', borderRadius: '12px', maxWidth: 840, m: '5px auto'}}>
               <Box sx={{ padding: { xs: '0 24px 24px 24px', sm: '0 40px 40px 40px' }, marginTop: { xs: '24px', sm: '40px' } }}>
-                <MarkdownText content={`**説明:**\n\n${test.description}`} />
-                <MarkdownText content={`**改善案:**\n\n${test.improvementSuggestion}`} />
-                <Typography>平均スコア: {test.avgScore}</Typography>
-                <MarkdownText content={`**テスト URL:** [${test.siteUrl}](${test.siteUrl})`} />
+                <MarkdownText content={`## 説明\n\n${test.description}`} />
+                <MarkdownText content={`## 改善案\n\n${test.improvementSuggestion}`} />
+                <br />
+                <MarkdownText content={`引用URL: [${test.siteUrl}](${test.siteUrl})`} />
               </Box>
             </Card>
+
 
             {/* 比較表 */}
             <Box sx={{ mt: 6 }}>
               <Typography component="h3" sx={{ fontSize: 20, fontWeight: 'bold', mb: 2 }}>
                 あなたの過去のテスト結果（期間ごとの比較）
               </Typography>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>質問名/回答日</TableCell>
-                    {testAnswers.map((answer, index) => (
-                      <TableCell key={index}>{new Date(answer.timestamp).toLocaleDateString()}</TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {questions.map((question) => (
-                    <TableRow key={question.id}>
-                      <TableCell>{question.questionText}</TableCell>
-                      {testAnswers.map((answer, index) => {
-                        console.log('Checking question.id:', question.id)
-                        console.log('answer.testAnswerDetails:', answer.testAnswerDetails)
-                        const detail = answer.testAnswerDetails.find((d) => d.question_id === question.id)
-
-                        return (
-                          <TableCell key={index}>
-                            {detail?.score}
-                          </TableCell>
-                        )
-                      })}
+              <Box sx={{ overflowX: 'auto' }}> 
+                <Table sx={{ minWidth: 600, width: '100%' }}> {/* Set a minimum width for the table */}
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>質問名/回答日</TableCell>
+                      {testAnswers.map((answer, index) => (
+                        <TableCell key={index}>{new Date(answer.timestamp).toLocaleDateString()}</TableCell>
+                      ))}
                     </TableRow>
-                  ))}
-                  {/* 平均スコアの行 */}
-                  <TableRow>
-                    <TableCell>平均点</TableCell>
-                    {testAnswers.map((answer, index) => (
-                      <TableCell key={index}>
-                        {answer.average}
-                        {index > 0 && getScoreChange(answer.average, testAnswers[index - 1].average)}
-                      </TableCell>
+                  </TableHead>
+                  <TableBody>
+                    {questions?.map((question) => (
+                      <TableRow key={question.id}>
+                        <TableCell>{question.questionText}</TableCell>
+                        {testAnswers.map((answer, index) => {
+                          const detail = answer.testAnswerDetails.find((d) => d.question_id === question.id);
+                          return (
+                            <TableCell key={index}>
+                              {detail?.score}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
                     ))}
-                  </TableRow>
-                </TableBody>
-              </Table>
+                    {/* 平均スコアの行 */}
+                    <TableRow>
+                      <TableCell>平均点</TableCell>
+                      {testAnswers.map((answer, index) => (
+                        <TableCell key={index}>
+                          {answer.average}
+                          {index > 0 && getScoreChange(answer.average, testAnswers[index - 1].average)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </Box>
             </Box>
           </Box>
         </Box>

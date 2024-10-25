@@ -21,6 +21,7 @@ import { styles } from '@/styles'
 import { fetcher } from '@/utils'
 import React, { useState } from 'react'
 import axios, { AxiosError } from 'axios'
+import MarkdownText from '@/components/MarkdownText'
 
 
 type TestQuestionProps = {
@@ -140,26 +141,30 @@ const QuestionForm: NextPage = () => {
         borderTop: '0.5px solid #acbcc7',
         pb: 8,
         px: 2,
+        pt: 5,
+        display: 'flex', // フレックスボックスを使用
+        alignItems: 'center', // 垂直方向の中央配置
+        flexDirection: 'column', // 縦に並べる
       }}
     >
       <Typography variant="h4" sx={{ mb: 4 }}>
         {test.title}
       </Typography>
-
-      <Typography variant="body1" sx={{ mb: 2 }}>
-        {test.description}
+  
+      <Typography sx={{ mb: 4 }}>
+        以下の質問について、{test.minScore}(あてはまらない)～{test.maxScore}(あてはまる)の間の数字で回答してください。
       </Typography>
-
+  
       <Typography variant="body2" sx={{ mb: 2 }}>
         あてはまる: {test.maxScore}点
       </Typography>
       <Typography variant="body2" sx={{ mb: 4 }}>
         あてはまらない: {test.minScore}点
       </Typography>
-       
+  
       <form onSubmit={handleSubmit}>
-        <Box sx={{ display: "flex", flexDirection: "column" }}> 
-        {questions.map((question, index) => (
+        <Box sx={{ display: "flex", flexDirection: "column" }}>
+          {questions.map((question, index) => (
             <FormControl key={question.id} component="fieldset" sx={{ mb: 3 }} error={!!errors[question.id]}>
               <Typography variant="body1">
                 {index + 1}. {question.questionText}
@@ -187,11 +192,11 @@ const QuestionForm: NextPage = () => {
             </FormControl>
           ))}
         </Box>
-      
-        <LoadingButton 
-          type="submit" 
-          loading={isLoading} 
-          variant="contained" 
+  
+        <LoadingButton
+          type="submit"
+          loading={isLoading}
+          variant="contained"
           color="primary"
           sx={{ mt: 2 }} // スペースを確保
         >
@@ -200,6 +205,7 @@ const QuestionForm: NextPage = () => {
       </form>
     </Box>
   )
+  
 }
 
 export default QuestionForm
