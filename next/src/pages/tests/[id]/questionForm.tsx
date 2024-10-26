@@ -143,6 +143,7 @@ const QuestionForm: NextPage = () => {
         px: 2,
         pt: 5,
         display: 'flex', // フレックスボックスを使用
+        justifyContent: 'center', // 水平方向の中央配置
         alignItems: 'center', // 垂直方向の中央配置
         flexDirection: 'column', // 縦に並べる
       }}

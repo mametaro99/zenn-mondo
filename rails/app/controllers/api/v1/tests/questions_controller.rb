@@ -7,7 +7,7 @@ class Api::V1::Tests::QuestionsController < Api::V1::BaseController
 
   private
 
-  def set_test
-    @test = Test.find(params[:test_id])
-  end
+    def set_test
+      @test = Test.find(params[:test_id])
+    end
 end

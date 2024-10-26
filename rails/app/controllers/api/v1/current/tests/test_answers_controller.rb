@@ -12,7 +12,7 @@ class Api::V1::Current::Tests::TestAnswersController < Api::V1::BaseController
     @test_answer = TestAnswer.new(test_answer_params)
     @test_answer.user = current_user
     @test_answer.test = @test
-    @test_answer.timestamp = Time.now
+    @test_answer.timestamp = Time.zone.now
     if @test_answer.save
       @test.questions.each do |question|
         score = params[:scores][question.id.to_s].to_i
@@ -30,11 +30,11 @@ class Api::V1::Current::Tests::TestAnswersController < Api::V1::BaseController
 
   private
 
-  def set_test
-    @test = Test.find(params[:test_id])
-  end
+    def set_test
+      @test = Test.find(params[:test_id])
+    end
 
-  def test_answer_params
-    params.permit(:user_id, :test_id, :timestamp)
-  end
+    def test_answer_params
+      params.permit(:user_id, :test_id, :timestamp)
+    end
 end

@@ -7,8 +7,9 @@ class TestAnswer < ApplicationRecord
 
   private
 
-  def set_count # countに、同じユーザー、同じテストの中で最大のcount + 1をセットする
-    max_count = TestAnswer.where(user: user, test: test).maximum(:count) || 0
-    self.count = max_count + 1
-  end
+    # countに、同じユーザー、同じテストの中で最大のcount + 1をセットする
+    def set_count
+      max_count = TestAnswer.where(user: user, test: test).maximum(:count) || 0
+      self.count = max_count + 1
+    end
 end
