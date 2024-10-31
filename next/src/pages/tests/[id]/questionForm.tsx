@@ -37,13 +37,20 @@ type TestProps = {
 }
 
 const QuestionForm: NextPage = () => {
+  const router = useRouter()
+  // router.isReadyでクエリが準備できているかを確認
+  if (!router.isReady) {
+    return <Loading />
+  }
+  
   useRequireSignedIn()
   const [user] = useUserState()
   const [, setSnackbar] = useSnackbarState()
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const { id } = router.query
   const [errors, setErrors] = useState<{ [key: number]: string }>({}) // エラー状態を追加
+
+  const { id } = router.query
+
 
   // URLを常に生成
   const testUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/tests/${id}`

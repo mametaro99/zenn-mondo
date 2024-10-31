@@ -34,6 +34,10 @@ const SignUp: NextPage = () => {
     },
     password: {
       required: 'パスワードを入力してください。',
+      minLength: {
+        value: 6,
+        message: 'パスワードは6文字以上で入力してください。',
+      },
     },
     name: {
       required: 'ユーザー名を入力してください。',
