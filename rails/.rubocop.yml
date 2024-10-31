@@ -8,3 +8,5 @@ inherit_from:
 
 AllCops:
   TargetRubyVersion: 3.1.2
+  Exclude:
+    - 'db/seeds.rb' # seedファイルを対象から除外

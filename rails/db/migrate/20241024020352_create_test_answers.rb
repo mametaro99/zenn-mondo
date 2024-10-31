@@ -8,7 +8,7 @@ class CreateTestAnswers < ActiveRecord::Migration[7.0]
 
       t.timestamps
     end
-    
+
     # ユニーク制約の追加
     add_index :test_answers, [:user_id, :test_id, :count], unique: true
   end
