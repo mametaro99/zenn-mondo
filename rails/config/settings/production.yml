@@ -1,1 +1,1 @@
-front_domain: "https://zenn-clone-demo.com"
+front_domain: "http://zenn-clone-alb-frontend-400965616.us-east-1.elb.amazonaws.com"
