@@ -27,3 +27,79 @@
 また、各テストで測られる指標についての説明や、その指標がもたらす生活への影響や、その指標の改善点を論文を元に紹介しています。
 
 ![alt text](instruction.png)
+
+## アプリの技術スタック
+
+### バックエンド
+Ruby(3.1.2)
+RailsAPI(7.0.4)
+
+#### 主なGem
+
+- Devise
+- bullet
+- kaminari
+- Rspec
+- FactoryBot
+- rubocop
+
+### フロントエンド
+Typescript(5.3.3)
+
+React(18.3.1)
+
+Next.js(15.0.1) PageRouter
+
+#### 主なライブラリ
+
+- Material-UI(5.14.7)
+- ESlint(8.48.0)
+- pretter(3.0.3)
+- chart.js(グラフ描画)
+- marked（マークダウン表示用）
+
+### データベース
+MySQL(8.0.32)
+
+
+### CI・CD
+GithubActions
+
+### ソースコード管理
+Github
+
+### インフラ
+開発環境：
+- Docker(24.0.5)
+- Ubuntu(22.04.3 LTS)
+
+本番環境：
+- AWS（ECS,ECR,VPC,ALB,IAM等）
+- zeroSSL(SSL証明書発行)
+- ドメイン取得（お名前ドットコム）
+- Gmail SMTP(メール送信)
+
+### その他開発ツール
+
+- GoogleChrome
+- Talend API Tester(API動作確認)
+- Chrome検証機能(フロントエンド動作確認)
+- VisualStudioCode
+
+
+
+## 開発した機能一覧
+
+- サインイン・サインアウト機能
+- サインアップ機能
+- ユーザのメール認証機能
+- テストの一覧・詳細表示
+- テストの受験フォーム
+- ユーザのテスト結果のグラフ作成
+
+## 工夫したところ　【バックエンド】
+
+### CROD設計
+
+RailsControllerで定義するメソッドを、[CROD設計]()に基づいて
+
