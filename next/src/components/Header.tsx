@@ -1,4 +1,3 @@
-import ArticleIcon from '@mui/icons-material/Article'
 import Logout from '@mui/icons-material/Logout'
 import PersonIcon from '@mui/icons-material/Person'
 import {
@@ -16,9 +15,9 @@ import {
 } from '@mui/material'
 import Image from 'next/image'
 import Link from 'next/link'
+import router from 'next/router'
 import { useState } from 'react'
 import { useUserState } from '@/hooks/useGlobalState'
-import router from 'next/router'
 
 const Header = () => {
   const [user] = useUserState()

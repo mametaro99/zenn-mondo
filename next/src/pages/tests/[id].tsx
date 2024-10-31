@@ -3,9 +3,6 @@ import {
   Container,
   Typography,
   Card,
-  List,
-  ListItem,
-  ListItemText,
   Table,
   TableBody,
   TableCell,
@@ -17,12 +14,11 @@ import camelcaseKeys from 'camelcase-keys'
 import type { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import useSWR from 'swr'
+import AverageScoreChart from '@/components/AverageScoreChart'
 import Error from '@/components/Error'
 import Loading from '@/components/Loading'
 import MarkdownText from '@/components/MarkdownText'
 import { fetcher } from '@/utils'
-import React from 'react'
-import AverageScoreChart from '@/components/AverageScoreChart'
 
 type TestQuestionProps = {
   id: number
@@ -67,13 +63,13 @@ const TestDetail: NextPage = () => {
   const userResultsUrl = id ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/current/tests/${id}/test_answers` : null
   const questionsUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/tests/${id}/questions`
 
-
-  const { data: testData, error: testError } = useSWR(testUrl, fetcher)
-  const { data: resultData, error: resultError } = useSWR(userResultsUrl, fetcher)
-  const { data: questionData, error: questionError } = useSWR(questionsUrl, fetcher)
+  const { data: testData, error: testError } = useSWR(testUrl, fetcher);
+  const { data: resultData, error: resultError } = useSWR(userResultsUrl, fetcher);
+  const { data: questionData, error: questionsError } = useSWR(questionsUrl, fetcher);
 
   if (testError || resultError) return <Error />
   if (!testData || !resultData) return <Loading />
+  if (questionsError) return <Error />
 
   const test: TestProps = camelcaseKeys(testData)
   const testAnswers: TestAnswerProps[] = camelcaseKeys(resultData)
@@ -148,6 +144,8 @@ const TestDetail: NextPage = () => {
                       <TableRow key={question.id}>
                         <TableCell>{question.questionText}</TableCell>
                         {testAnswers.map((answer, index) => {
+                          // Ignore the TypeScript error for the next line
+                          // @ts-expect-error Property 'question_id' does not exist on type 'TestAnswerDetailProps'
                           const detail = answer.testAnswerDetails.find((d) => d.question_id === question.id);
                           return (
                             <TableCell key={index}>

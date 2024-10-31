@@ -6,22 +6,20 @@ import {
   FormHelperText,
   Radio,
   RadioGroup,
-  TextField,
   Typography,
 } from '@mui/material'
+import axios, { AxiosError } from 'axios'
 import camelcaseKeys from 'camelcase-keys'
 import type { NextPage } from 'next'
-import useSWR from 'swr'
 import { useRouter } from 'next/router'
+import React, { useState } from 'react'
+import useSWR from 'swr'
 import Error from '@/components/Error'
 import Loading from '@/components/Loading'
 import { useSnackbarState, useUserState } from '@/hooks/useGlobalState'
 import { useRequireSignedIn } from '@/hooks/useRequireSignedIn'
 import { styles } from '@/styles'
 import { fetcher } from '@/utils'
-import React, { useState } from 'react'
-import axios, { AxiosError } from 'axios'
-import MarkdownText from '@/components/MarkdownText'
 
 
 type TestQuestionProps = {

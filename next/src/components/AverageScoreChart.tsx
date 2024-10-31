@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { Chart, registerables } from 'chart.js';
 import { Box } from '@mui/material';
+import { Chart, registerables } from 'chart.js';
+import { useEffect, useRef } from 'react';
 
 Chart.register(...registerables);
 
