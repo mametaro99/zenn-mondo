@@ -243,6 +243,6 @@ erDiagram
 
 ![alt text](zen-mondo-network.drawio.png)
 
-上記は、ネットワークの構成については、以下の記事を参考にしました。
+上記は、ネットワークの構成については、以下の記事を参考に設計しました。
 
 [【独学ポートフォリオ開発応援】実務未経験から学べる！Rails×Next.js×AWSハンズオン解説](https://zenn.dev/ddpmntcpbr/books/rna-hands-on)
