@@ -113,6 +113,14 @@ const Header = () => {
                        </Typography>
                      </Box>
                      <Divider />
+                     <Link href="/past_taken_tests">
+                       <MenuItem>
+                         <ListItemIcon>
+                            <PersonIcon fontSize="small" />
+                         </ListItemIcon>
+                         受験したテスト
+                       </MenuItem>
+                     </Link>
                      <Link href="/sign_out">
                        <MenuItem>
                          <ListItemIcon>
