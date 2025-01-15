@@ -16,8 +16,9 @@ Rails.application.routes.draw do
       end
 
       namespace :current do
-        resources :tests, only: [:index] do
+        resources :tests, only: [:index, :create, :update, :destroy] do
           resources :test_answers, only: [:index, :create], module: :tests
+          resources :questions, only: [:create, :update, :destroy], module: :tests
         end
         resource :user, only: [:show]
       end
