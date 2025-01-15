@@ -5,6 +5,11 @@ Rails.application.routes.draw do
       get "health_check", to: "health_check#index"
       mount_devise_token_auth_for "User", at: "auth"
 
+  mount_devise_token_auth_for 'Admin', at: 'auth'
+  as :admin do
+    # Define routes for Admin within this block.
+  end
+
       namespace :user do
         resource :confirmations, only: [:update]
       end
