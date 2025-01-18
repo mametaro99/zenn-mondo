@@ -5,14 +5,21 @@ Rails.application.routes.draw do
       get "health_check", to: "health_check#index"
       mount_devise_token_auth_for "User", at: "auth"
 
-      mount_devise_token_auth_for 'Admin', at: 'auth'
-
       namespace :current do
         resource :admin, only: [:show]
       end
 
       namespace :user do
         resource :confirmations, only: [:update]
+      end
+
+      namespace :admin do
+        mount_devise_token_auth_for 'Admin', at: 'auth', controllers: {
+          registrations: 'api/v1/admin/registrations',
+          sessions: 'api/v1/admin/sessions',
+          passwords: 'api/v1/admin/passwords',
+          token_validations: 'api/v1/admin/token_validations'
+        }
       end
 
       namespace :current do
