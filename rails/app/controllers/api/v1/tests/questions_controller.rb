@@ -6,22 +6,4 @@ class Api::V1::Tests::QuestionsController < Api::V1::BaseController
     questions = @test.questions
     render json: questions
   end
-
-  def create
-
-  end
-
-  def update
-
-  end
-
-  def destroy
-  
-  end
-
-  private
-
-    def set_test
-      @test = Test.find(params[:test_id])
-    end
 end
