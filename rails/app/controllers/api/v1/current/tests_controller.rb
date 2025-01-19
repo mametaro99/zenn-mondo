@@ -11,7 +11,7 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
   end
 
   def create
-    test = Test.create!(test_params.merge(admin_id_id: current_admin.id))
+    test = current_admin.tests.create!(test_params)
     render json: test
   end
 
