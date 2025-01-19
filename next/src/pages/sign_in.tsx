@@ -134,6 +134,15 @@ const SignIn: NextPage = () => {
          </LoadingButton>
         </Stack>
       </Container>
+
+      {/* 科学者の方はこちらという文章をリンクで表示 */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Typography
+          sx={{ color: 'black', fontSize: 16 }}
+        >
+          <a href="/admin/sign_in">科学者の方はこちら</a>
+        </Typography>
+      </Box>
     </Box>
   )
 }
