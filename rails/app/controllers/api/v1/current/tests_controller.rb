@@ -16,11 +16,23 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
   end
 
   def update
-    
+    test = Test.find(params[:id])
+    if test.admin == current_admin
+      test.update!(test_params)
+      render json: test
+    else
+      render json: { errors: 'You do not have permission to update this test' }, status: :forbidden
+    end
   end
 
   def destroy
-  
+    test = Test.find(params[:id])
+    if test.admin == current_admin
+      test.destroy!
+      render json: test
+    else
+      render json: { errors: 'You do not have permission to delete this test' }, status: :forbidden
+    end
   end
 
   protected
