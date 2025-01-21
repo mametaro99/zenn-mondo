@@ -9,6 +9,7 @@ import Header from '@/components/Header'
 import Snackbar from '@/components/Snackbar'
 import createEmotionCache from '@/styles/createEmotionCache'
 import theme from '@/styles/theme'
+import CurrentAdminFetch from '@/components/CurrentAdminFetch'
 
 // Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createEmotionCache()
@@ -25,6 +26,7 @@ export default function MyApp(props: MyAppProps): JSX.Element {
         {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
         <CssBaseline />
         <CurrentUserFetch />
+        <CurrentAdminFetch />
         <Header />
         <Component {...pageProps} />
         <Snackbar />
