@@ -40,7 +40,7 @@ export const useAdminState = () => {
     isFetched: false,
   }
 
-  const { data: state, mutate: setState } = useSWR('user', null, {
+  const { data: state, mutate: setState } = useSWR('admin', null, {
     fallbackData: fallbackData,
   })
   return [state, setState] as [adminStateType, (value: adminStateType) => void]
