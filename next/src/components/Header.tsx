@@ -51,9 +51,15 @@ const Header = () => {
           }}
         >
           <Box>
-            <Link href="/">
-              <Image src="/logo1.png" width={150} height={60} alt="logo" />
-            </Link>
+            {admin.isSignedIn ? (
+              <Link href="/admin/home">
+                <Image src="/logo1.png" width={150} height={60} alt="logo" />
+              </Link>
+            ) : (
+              <Link href="/">
+                <Image src="/logo1.png" width={150} height={60} alt="logo" />
+              </Link>
+            )}
           </Box>
           {(user.isFetched || admin.isFetched)&& (
             <>
