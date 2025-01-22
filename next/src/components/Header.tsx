@@ -17,10 +17,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import router from 'next/router'
 import { useState } from 'react'
-import { useUserState } from '@/hooks/useGlobalState'
+import { useUserState, useAdminState } from '@/hooks/useGlobalState'
 
 const Header = () => {
   const [user] = useUserState()
+  const [admin] = useAdminState()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
 
@@ -54,9 +55,9 @@ const Header = () => {
               <Image src="/logo1.png" width={150} height={60} alt="logo" />
             </Link>
           </Box>
-          {user.isFetched && (
+          {(user.isFetched || admin.isFetched)&& (
             <>
-              {!user.isSignedIn && (
+              {(!user.isSignedIn && !admin.isSignedIn)&& (
                 <Box>
                   <Button
                     color="primary"
@@ -93,7 +94,7 @@ const Header = () => {
                   </Link>
                 </Box>
               )}
-              {user.isSignedIn && (
+              {(user.isSignedIn && !admin.isSignedIn) &&(
                  <Box sx={{ display: 'flex' }}>
                    <IconButton onClick={handleClick} sx={{ p: 0 }}>
                      <Avatar>
@@ -131,6 +132,37 @@ const Header = () => {
                      </Link>
                    </Menu>
                  </Box>
+               )}
+               {(!user.isSignedIn && admin.isSignedIn) &&(
+                  <Box sx={{ display: 'flex' }}>
+                    <IconButton onClick={handleClick} sx={{ p: 0 }}>
+                      <Avatar>
+                        <PersonIcon />
+                      </Avatar>
+                    </IconButton>
+                    <Menu
+                      anchorEl={anchorEl}
+                      id="account-menu"
+                      open={open}
+                      onClose={handleClose}
+                      onClick={handleClose}
+                    >
+                      <Box sx={{ pl: 2, py: 1 }}>
+                        <Typography sx={{ fontWeight: 'bold' }}>
+                          {admin.name}
+                        </Typography>
+                      </Box>
+                      <Divider />
+                      <Link href="/admin/sign_out">
+                        <MenuItem>
+                          <ListItemIcon>
+                            <Logout fontSize="small" />
+                          </ListItemIcon>
+                          サインアウト
+                        </MenuItem>
+                      </Link>
+                    </Menu>
+                  </Box>
                )}
              </>
            )}
