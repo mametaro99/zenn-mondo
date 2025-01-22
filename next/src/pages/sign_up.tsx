@@ -1,5 +1,5 @@
 import { LoadingButton } from '@mui/lab'
-import { Box, Container, TextField, Typography, Stack } from '@mui/material'
+import { Box, Container, TextField, Typography, Stack, Link } from '@mui/material'
 import axios, { AxiosResponse, AxiosError } from 'axios'
 import type { NextPage } from 'next'
 import { useRouter } from 'next/router'
@@ -162,6 +162,17 @@ const SignUp: NextPage = () => {
           </LoadingButton>
         </Stack>
       </Container>
+
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Link href="/admin/sign_up">
+          <Typography
+            component="a"
+            sx={{ color: 'blue', textDecoration: 'underline' }}
+          >
+            科学者の方はこちらへ
+          </Typography>
+        </Link>
+      </Box>
     </Box>
   )
 }
