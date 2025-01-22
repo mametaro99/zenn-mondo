@@ -72,16 +72,16 @@ const SignIn: NextPage = () => {
         setSnackbar({
           message: 'サインインに成功しました',
           severity: 'success',
-          pathname: '/',
+          pathname: '/admin/home',
         })
-        router.push('/')
+        router.push('/admin/home')
       })
       .catch((e: AxiosError<{ error: string }>) => {
         console.log(e.message)
         setSnackbar({
           message: '登録ユーザーが見つかりません',
           severity: 'error',
-          pathname: '/sign_in',
+          pathname: 'admin/sign_in',
         })
         setIsLoading(false)
       })
@@ -147,7 +147,6 @@ const SignIn: NextPage = () => {
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <Link href="/admin/sign_up">
           <Typography
-            component="a"
             sx={{ color: 'blue', textDecoration: 'underline' }}
           >
             まだ、アカウントを作成していない科学者の方はこちら
