@@ -1,5 +1,5 @@
 import { LoadingButton } from '@mui/lab'
-import { Box, Container, TextField, Typography, Stack } from '@mui/material'
+import { Box, Container, TextField, Typography, Stack, Link } from '@mui/material'
 import axios, { AxiosResponse, AxiosError } from 'axios'
 import type { NextPage } from 'next'
 import { useRouter } from 'next/router'
@@ -20,9 +20,9 @@ const SignIn: NextPage = () => {
   const [admin] = useAdminState()
   const [, setSnackbar] = useSnackbarState()
 
-  if (admin.isSignedIn) {
+  if (admin.isSignedIn || user.isSignedIn) {
     setSnackbar({
-      message: 'ユーザでのログインをする場合は現在ログインしている科学者のアカウントのログアウトをしてください。',
+      message: 'すでにログインをしています。別のアカウントでログインをする場合には一度ログアウトしてください。',
       severity: 'error',
       pathname: '/',
     })
@@ -145,13 +145,15 @@ const SignIn: NextPage = () => {
         </Stack>
       </Container>
 
-      {/* 科学者の方はこちらという文章をリンクで表示 */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <Typography
-          sx={{ color: 'black', fontSize: 16 }}
-        >
-          <a href="/admin/sign_in">科学者の方はこちら</a>
-        </Typography>
+        <Link href="/admin/sign_in">
+          <Typography
+            component="a"
+            sx={{ color: 'blue', textDecoration: 'underline' }}
+          >
+            科学者の方はこちらへ
+          </Typography>
+        </Link>
       </Box>
     </Box>
   )
