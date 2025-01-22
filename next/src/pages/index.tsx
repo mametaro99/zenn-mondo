@@ -23,7 +23,6 @@ const Index: NextPage = () => {
 
   const { data, error } = useSWR(url, fetcher)
   if (error) return <Error />
-  if (!data) return <div>Loading...</div>
   if (!data) return <Loading />
 
   const tests = camelcaseKeys(data.tests)
