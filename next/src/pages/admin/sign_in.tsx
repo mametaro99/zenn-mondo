@@ -5,7 +5,7 @@ import type { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
 import { useForm, SubmitHandler, Controller } from 'react-hook-form'
-import { useUserState, useSnackbarState } from '@/hooks/useGlobalState'
+import { useAdminState, useSnackbarState, useUserState } from '@/hooks/useGlobalState'
 
 type SignInFormData = {
   email: string
@@ -15,9 +15,19 @@ type SignInFormData = {
 const SignIn: NextPage = () => {
   
   const router = useRouter()
+  const [user] = useUserState()
   const [isLoading, setIsLoading] = useState(false)
-  const [user, setUser] = useUserState()
+  const [admin, setAdmin] = useAdminState()
   const [, setSnackbar] = useSnackbarState()
+
+  if (user.isSignedIn) {
+    setSnackbar({
+      message: '科学者でのログインをする場合は現ユーザのログアウトをしてください。',
+      severity: 'error',
+      pathname: '/',
+    })
+    router.push('/')
+  }
 
   const { handleSubmit, control } = useForm<SignInFormData>({
     defaultValues: { email: '', password: '' },
@@ -55,8 +65,8 @@ const SignIn: NextPage = () => {
         localStorage.setItem('access-token', res.headers['access-token'])
         localStorage.setItem('client', res.headers['client'])
         localStorage.setItem('uid', res.headers['uid'])
-        setUser({
-          ...user,
+        setAdmin({
+          ...admin,
           isFetched: false,
         })
         setSnackbar({
