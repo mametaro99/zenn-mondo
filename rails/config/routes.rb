@@ -24,6 +24,9 @@ Rails.application.routes.draw do
 
       namespace :current do
         resources :tests, only: [:index, :create, :update, :destroy] do
+          collection do
+            get :admin_index
+          end
           resources :test_answers, only: [:index, :create], module: :tests
           resources :questions, only: [:create, :update, :destroy], module: :tests
         end
