@@ -1,5 +1,6 @@
 import Logout from '@mui/icons-material/Logout'
 import PersonIcon from '@mui/icons-material/Person'
+import ArticleIcon from '@mui/icons-material/Article'
 import {
   AppBar,
   Avatar,
@@ -159,6 +160,14 @@ const Header = () => {
                         </Typography>
                       </Box>
                       <Divider />
+                      <Link href="/admin/home">
+                        <MenuItem>
+                          <ListItemIcon>
+                            <ArticleIcon fontSize="small" />
+                          </ListItemIcon>
+                          テストの管理
+                        </MenuItem>
+                      </Link>
                       <Link href="/admin/sign_out">
                         <MenuItem>
                           <ListItemIcon>
