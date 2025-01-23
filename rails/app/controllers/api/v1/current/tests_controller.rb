@@ -12,8 +12,8 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
   end
   
   def admin_index
-    @tests = current_admin.tests.order(created_at: :desc).page(params[:page] || 1).per(10)
-    render json: @tests, each_serializer: TestSerializer, meta: pagination(@tests), adapter: :json
+    @tests = current_admin.tests.order(created_at: :desc)
+    render json: @tests, each_serializer: TestSerializer, adapter: :json
   end
 
   def create
