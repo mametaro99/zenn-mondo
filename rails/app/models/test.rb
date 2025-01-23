@@ -7,7 +7,7 @@ class Test < ApplicationRecord
   validates :description, presence: true
   enum :status, { unsaved: 10, draft: 20, published: 30 }
 
-  alidate :verify_only_one_unsaved_status_is_allowed
+  validate :verify_only_one_unsaved_status_is_allowed
 
    private
 
