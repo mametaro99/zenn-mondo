@@ -17,8 +17,8 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
   end
 
   def create
-    test = current_admin.tests.create!(test_params)
-    render json: test
+    unsaved_test = current_admin.tests.unsaved.first || current_admin.tests.create!(status: :unsaved)
+    render json: unsaved_test
   end
 
   def update
