@@ -7,6 +7,7 @@ class Api::V1::TestsController < ApplicationController
 
   def index
     tests = Test.order(created_at: :desc).page(params[:page] || 1).per(10)
-    render json: tests, each_serializer: TestSerializer, meta: pagination(tests), adapter: :json
+    published_tests = tests.where(status: :published)
+    render json: published_tests, each_serializer: TestSerializer, meta: pagination(published_tests), adapter: :json
   end
 end
