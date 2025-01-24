@@ -8,6 +8,7 @@ import {
   Tooltip,
   Typography,
   IconButton,
+  Link,
 } from '@mui/material'
 import camelcaseKeys from 'camelcase-keys'
 import type { NextPage } from 'next'
@@ -130,13 +131,15 @@ const CurrentAdminTests: NextPage = () => {
                   </Avatar>
                 </Box>
                 <Box>
-                  <Avatar>
-                    <Tooltip title="表示を確認">
-                      <IconButton sx={{ backgroundColor: '#F1F5FA' }}>
-                        <ChevronRightIcon sx={{ color: '#99AAB6' }} />
-                      </IconButton>
-                    </Tooltip>
-                  </Avatar>
+                  <Link href={'/admin/tests/' + test.id}>
+                    <Avatar>
+                      <Tooltip title="表示を確認">
+                        <IconButton sx={{ backgroundColor: '#F1F5FA' }}>
+                          <ChevronRightIcon sx={{ color: '#99AAB6' }} />
+                        </IconButton>
+                      </Tooltip>
+                    </Avatar>
+                  </Link>
                 </Box>
               </Box>
             </Box>
