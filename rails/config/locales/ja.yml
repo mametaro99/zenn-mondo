@@ -42,3 +42,9 @@ ja:
         question_id: 質問ID
         created_at: 作成日時
         updated_at: 更新日時
+  enums:
+     test:
+       status:
+         unsaved: 未保存
+         draft: 下書き
+         published: 公開中
