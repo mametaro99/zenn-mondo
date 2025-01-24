@@ -44,7 +44,7 @@ const CurrentArticleDetail: NextPage = () => {
   useRequireAdminSignedIn()
   const [admin] = useAdminState()
   const router = useRouter()
-  const url = process.env.NEXT_PUBLIC_API_BASE_URL + '/current/tests'
+  const url = process.env.NEXT_PUBLIC_API_BASE_URL + '/current/tests/'
   const { id } = router.query
 
   const { data, error } = useSWR(
@@ -53,8 +53,8 @@ const CurrentArticleDetail: NextPage = () => {
   )
   if (error) return <Error />
   if (!data) return <Loading />
-
-  const test: CurrentTestProps = camelcaseKeys(data.test)
+  
+  const test: CurrentTestProps = camelcaseKeys(data)
 
   return (
     <Box
@@ -113,7 +113,7 @@ const CurrentArticleDetail: NextPage = () => {
             }}
           >
             <Box sx={{ width: 40, height: 40 }}>
-              <Link href={'/current/articles'}>
+              <Link href={'/admin/home'}>
                 <Avatar>
                   <Tooltip title="テストの管理に戻る">
                     <IconButton sx={{ backgroundColor: '#DDDDDD' }}>
