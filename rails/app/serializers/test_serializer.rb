@@ -1,5 +1,5 @@
 class TestSerializer < ActiveModel::Serializer
-  attributes :id, :title, :description, :site_url, :improvement_suggestion, :min_score, :max_score, :avg_score, :created_at, :from_today
+  attributes :id, :title, :description, :site_url, :improvement_suggestion, :min_score, :max_score, :avg_score, :created_at, :from_today, :status
 
   def created_at
     object.created_at.strftime("%Y/%m/%d")
