@@ -1,7 +1,7 @@
 class Api::V1::Current::TestsController < Api::V1::BaseController
   include Pagination
   before_action :authenticate_user!, only: [:index]
-  before_action :authenticate_admin!, only: [:admin_index, :create, :update, :destroy] 
+  before_action :authenticate_admin!, only: [:admin_index, :show, :create, :update, :destroy] 
 
 
   # ログインしたユーザが受けたテストの一覧を返す
@@ -14,6 +14,11 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
   def admin_index
     @tests = current_admin.tests.not_unsaved.order(created_at: :desc)
     render json: @tests, each_serializer: TestSerializer, adapter: :json
+  end
+
+  def show
+    test = current_admin.tests.find(params[:id])
+    render json: test
   end
 
   def create
