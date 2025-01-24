@@ -12,7 +12,7 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
   end
   
   def admin_index
-    @tests = current_admin.tests.order(created_at: :desc)
+    @tests = current_admin.tests.not_unsaved.order(created_at: :desc)
     render json: @tests, each_serializer: TestSerializer, adapter: :json
   end
 
