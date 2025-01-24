@@ -5,6 +5,10 @@ class TestSerializer < ActiveModel::Serializer
     object.created_at.strftime("%Y/%m/%d")
   end
 
+  def status
+    object.status_i18n
+  end
+
   def from_today # rubocop:disable Metrics/AbcSize
     now = Time.zone.now
     created_at = object.created_at
