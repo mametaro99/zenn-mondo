@@ -148,7 +148,7 @@ const CurrentTestEdit: NextPage = () => {
 
     const status = statusChecked ? 'published' : 'draft'
 
-    const patchData = { ...data, status: status }
+    const patchData = { test: { ...data, status: status } }
 
     axios({
       method: 'PATCH',
@@ -216,7 +216,7 @@ const CurrentTestEdit: NextPage = () => {
                 checked={previewChecked}
                 onChange={handleChangePreviewChecked}
               />
-              <Typography sx={{ fontSize: { xs: 12, sm: 15 } }}>
+              <Typography sx={{ color: "black", fontSize: { xs: 12, sm: 15 } }}>
                 プレビュー表示
               </Typography>
             </Box>
@@ -225,7 +225,7 @@ const CurrentTestEdit: NextPage = () => {
                 checked={statusChecked}
                 onChange={handleChangeStatusChecked}
               />
-              <Typography sx={{ fontSize: { xs: 12, sm: 15 } }}>
+              <Typography sx={{ color: "black", fontSize: { xs: 12, sm: 15 } }}>
                 下書き／公開
               </Typography>
             </Box>
