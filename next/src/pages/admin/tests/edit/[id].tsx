@@ -115,7 +115,7 @@ const CurrentTestEdit: NextPage = () => {
       setStatusChecked(test.status == '公開中')
       setIsFetched(true)
     }
-  }, [data, reset])
+  }, [data, reset, test])
 
   const onSubmit: SubmitHandler<TestFormData> = (data) => {
     if (data.title == '') {
@@ -251,6 +251,7 @@ const CurrentTestEdit: NextPage = () => {
         {!previewChecked && (
           <Box sx={{ width: 840 }}>
             <Box sx={{ mb: 2 }}>
+              <Typography>タイトル</Typography>
               <Controller
                 name="title"
                 control={control}
@@ -268,6 +269,7 @@ const CurrentTestEdit: NextPage = () => {
               />
             </Box>
             <Box sx={{ mb: 2 }}>
+              <Typography>説明</Typography>
               <Controller
                 name="description"
                 control={control}
@@ -287,23 +289,7 @@ const CurrentTestEdit: NextPage = () => {
               />
             </Box>
             <Box sx={{ mb: 2 }}>
-              <Controller
-                name="siteUrl"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    type="url"
-                    error={fieldState.invalid}
-                    helperText={fieldState.error?.message}
-                    placeholder="Site URL"
-                    fullWidth
-                    sx={{ backgroundColor: 'white' }}
-                  />
-                )}
-              />
-            </Box>
-            <Box sx={{ mb: 2 }}>
+              <Typography>改善案</Typography>
               <Controller
                 name="improvementSuggestion"
                 control={control}
@@ -323,55 +309,78 @@ const CurrentTestEdit: NextPage = () => {
               />
             </Box>
             <Box sx={{ mb: 2 }}>
+              <Typography>引用URL</Typography>
+              <Controller
+                name="siteUrl"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    {...field}
+                    type="url"
+                    error={fieldState.invalid}
+                    helperText={fieldState.error?.message}
+                    placeholder="Site URL"
+                    fullWidth
+                    sx={{ backgroundColor: 'white' }}
+                  />
+                )}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ flex: 1 }}>
+              <Typography>最低スコア</Typography>
               <Controller
                 name="minScore"
                 control={control}
                 render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    type="number"
-                    error={fieldState.invalid}
-                    helperText={fieldState.error?.message}
-                    placeholder="Minimum Score"
-                    fullWidth
-                    sx={{ backgroundColor: 'white' }}
-                  />
+                <TextField
+                  {...field}
+                  type="number"
+                  error={fieldState.invalid}
+                  helperText={fieldState.error?.message}
+                  placeholder="Minimum Score"
+                  fullWidth
+                  sx={{ backgroundColor: 'white' }}
+                />
                 )}
               />
-            </Box>
-            <Box sx={{ mb: 2 }}>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+              <Typography>最高スコア</Typography>
               <Controller
                 name="maxScore"
                 control={control}
                 render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    type="number"
-                    error={fieldState.invalid}
-                    helperText={fieldState.error?.message}
-                    placeholder="Maximum Score"
-                    fullWidth
-                    sx={{ backgroundColor: 'white' }}
-                  />
+                <TextField
+                  {...field}
+                  type="number"
+                  error={fieldState.invalid}
+                  helperText={fieldState.error?.message}
+                  placeholder="Maximum Score"
+                  fullWidth
+                  sx={{ backgroundColor: 'white' }}
+                />
                 )}
               />
-            </Box>
-            <Box sx={{ mb: 2 }}>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+              <Typography>平均スコア</Typography>
               <Controller
                 name="avgScore"
                 control={control}
                 render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    type="number"
-                    error={fieldState.invalid}
-                    helperText={fieldState.error?.message}
-                    placeholder="Average Score"
-                    fullWidth
-                    sx={{ backgroundColor: 'white' }}
-                  />
+                <TextField
+                  {...field}
+                  type="number"
+                  error={fieldState.invalid}
+                  helperText={fieldState.error?.message}
+                  placeholder="Average Score"
+                  fullWidth
+                  sx={{ backgroundColor: 'white' }}
+                />
                 )}
               />
+              </Box>
             </Box>
           </Box>
         )}
@@ -396,20 +405,10 @@ const CurrentTestEdit: NextPage = () => {
                   marginTop: { xs: '24px', sm: '40px' },
                 }}
               >
-                <MarkdownText content={watch('description')} />
-                <Typography
-                  component="h3"
-                  sx={{
-                    fontSize: { xs: 18, sm: 22 },
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                    pt: 2,
-                    pb: 4,
-                  }}
-                >
-                  Improvement Suggestion
-                </Typography>
-                <MarkdownText content={watch('improvementSuggestion')} />
+                <MarkdownText content={`## 説明\n\n${watch('description')}`} />
+                <MarkdownText content={`## 改善案\n\n${watch('improvementSuggestion') as string}`} />
+                <br />
+                <MarkdownText content={`- 引用URL:${watch('siteUrl') as string}`} />
               </Box>
             </Card>
           </Box>
