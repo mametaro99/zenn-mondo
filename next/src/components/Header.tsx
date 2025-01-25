@@ -40,7 +40,7 @@ const Header = () => {
   }
 
   const addNewArticle = () => {
-    const url = process.env.NEXT_PUBLIC_API_BASE_URL + '/current/articles'
+    const url = process.env.NEXT_PUBLIC_API_BASE_URL + '/current/tests'
 
     const headers = {
       'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ const Header = () => {
 
     axios({ method: 'POST', url: url, headers: headers })
       .then((res: AxiosResponse) => {
-        router.push('/current/articles/edit/' + res.data.id)
+        router.push('/admin/tests/edit/' + res.data.id)
       })
       .catch((e: AxiosError<{ error: string }>) => {
         console.log(e.message)
