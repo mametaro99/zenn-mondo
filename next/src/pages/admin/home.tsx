@@ -122,6 +122,7 @@ const CurrentAdminTests: NextPage = () => {
                   )}
                 </>
                 <Box>
+                <Link href={'/admin/tests/edit/' + test.id}>
                   <Avatar>
                     <Tooltip title="編集する">
                       <IconButton sx={{ backgroundColor: '#F1F5FA' }}>
@@ -129,6 +130,7 @@ const CurrentAdminTests: NextPage = () => {
                       </IconButton>
                     </Tooltip>
                   </Avatar>
+                </Link>
                 </Box>
                 <Box>
                   <Link href={'/admin/tests/' + test.id}>
