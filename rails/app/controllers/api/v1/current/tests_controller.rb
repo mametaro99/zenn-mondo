@@ -57,6 +57,6 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
   # t.float :avg_score # 論文や調査で判明しているテストの平均点
 
   def test_params
-    params.require(:test).permit(:title, :description, :site_url, :improvement_suggestion, :min_score, :max_score, :avg_score)
+    params.require(:test).permit(:title, :description, :site_url, :improvement_suggestion, :min_score, :max_score, :avg_score, :status)
   end
 end
