@@ -16,7 +16,8 @@ import {
 } from '@mui/material'
 import Image from 'next/image'
 import Link from 'next/link'
-import router from 'next/router'
+import axios, { AxiosResponse, AxiosError } from 'axios'
+import router, { useRouter } from 'next/router'
 import { useState } from 'react'
 import { useUserState, useAdminState } from '@/hooks/useGlobalState'
 
@@ -26,11 +27,35 @@ const Header = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
 
+  const router = useRouter()
+
+   const hideHeaderPathnames = ['/current/articles/edit/[id]']
+   if (hideHeaderPathnames.includes(router.pathname)) return <></>
+
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget)
   }
   const handleClose = () => {
     setAnchorEl(null)
+  }
+
+  const addNewArticle = () => {
+    const url = process.env.NEXT_PUBLIC_API_BASE_URL + '/current/articles'
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'access-token': localStorage.getItem('access-token'),
+      client: localStorage.getItem('client'),
+      uid: localStorage.getItem('uid'),
+    }
+
+    axios({ method: 'POST', url: url, headers: headers })
+      .then((res: AxiosResponse) => {
+        router.push('/current/articles/edit/' + res.data.id)
+      })
+      .catch((e: AxiosError<{ error: string }>) => {
+        console.log(e.message)
+      })
   }
 
   return (
@@ -142,6 +167,22 @@ const Header = () => {
                )}
                {(!user.isSignedIn && admin.isSignedIn) &&(
                   <Box sx={{ display: 'flex' }}>
+                    <Button
+                      color="primary"
+                      variant="contained"
+                      sx={{
+                        color: 'white',
+                        textTransform: 'none',
+                        fontSize: 16,
+                        borderRadius: 2,
+                        width: 100,
+                        boxShadow: 'none',
+                        mr: 2,
+                      }}
+                      onClick={addNewArticle}
+                    >
+                      Add new
+                    </Button>
                     <IconButton onClick={handleClick} sx={{ p: 0 }}>
                       <Avatar>
                         <PersonIcon />
