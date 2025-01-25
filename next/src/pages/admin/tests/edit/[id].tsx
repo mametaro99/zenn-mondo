@@ -197,7 +197,7 @@ const CurrentTestEdit: NextPage = () => {
           }}
         >
           <Box sx={{ width: 50 }}>
-            <Link href="/admin/tests">
+            <Link href="/admin/home">
               <IconButton>
                 <ArrowBackSharpIcon />
               </IconButton>
