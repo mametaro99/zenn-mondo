@@ -75,6 +75,9 @@ const CurrentTestEdit: NextPage = () => {
   const [editingQuestionText, setEditingQuestionText] = useState<string>('');
   const [questions, setQuestions] = useState<QuestionProps[]>([]);
   const [editingisRevercedScore, setEditingisRevercedScore] = useState<boolean>(false);
+  const [creatingQuestionId, setCreatingQuestionId] = useState<number | null>(null);
+  const [creatingQuestionText, setCreatingQuestionText] = useState<string>('');
+  const [creatingisRevercedScore, setCreatingisRevercedScore] = useState<boolean>(false);
   const [questionSaved, setQuestionSaved] = useState(false);
 
   const handleChangePreviewChecked = () => {
@@ -226,7 +229,7 @@ const CurrentTestEdit: NextPage = () => {
     };
 
     try {
-      await axios.patch(`${url}/${id}/questions/${questionId}`, {
+      await axios.patch(`${url}/questions/${questionId}`, {
         question: {
           question_text: editingQuestionText,
           isReversedScore: editingisRevercedScore,
@@ -269,7 +272,7 @@ const CurrentTestEdit: NextPage = () => {
     };
     
     try {
-      await axios.post(`${url}/${id}/questions`, {
+      await axios.post(`${url}/questions`, {
         question: {
           question_text: editingQuestionText,
           isReversedScore: editingisRevercedScore,
@@ -281,9 +284,9 @@ const CurrentTestEdit: NextPage = () => {
         pathname: router.pathname,
       });
 
-      setEditingQuestionId(null);
-      setEditingQuestionText('');
-      setEditingisRevercedScore(false);
+      setCreatingQuestionId(null);
+      setCreatingQuestionText('');
+      setCreatingisRevercedScore(false);
     } catch (err) {
       const errorMessage =
         err instanceof AxiosError && err.response
@@ -515,7 +518,7 @@ const CurrentTestEdit: NextPage = () => {
                             <Typography>スコア反転</Typography>
                           </Box>
                           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button onClick={() => handleQuestion(question.id, question.question_text, question.isReversedScore)} color="primary">
+                            <Button onClick={() => handleSaveQuestion(question.id, question.question_text, question.isReversedScore)} color="primary">
                               保存
                             </Button>
                             <Button onClick={handleCancelEdit} color="secondary">
@@ -546,14 +549,14 @@ const CurrentTestEdit: NextPage = () => {
                     <TextField
                       fullWidth
                       label="質問名"
-                      value={editingQuestionText}
-                      onChange={(e) => setEditingQuestionText(e.target.value)}
+                      value={creatingQuestionText}
+                      onChange={(e) => setCreatingQuestionText(e.target.value)}
                       sx={{ mb: 2 }}
                     />       
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Switch
-                        checked={editingisRevercedScore}
-                        onChange={() => setEditingisRevercedScore(!editingisRevercedScore)}
+                        checked={creatingisRevercedScore}
+                        onChange={() => setCreatingisRevercedScore(!creatingisRevercedScore)}
                       />
                       <Typography>スコア反転</Typography>
                     </Box>
