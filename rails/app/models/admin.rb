@@ -7,5 +7,5 @@ class Admin < ActiveRecord::Base
          :recoverable, :rememberable, :validatable
   include DeviseTokenAuth::Concerns::User
 
-  has_many :tests
+  has_many :tests, dependent: :destroy
 end
