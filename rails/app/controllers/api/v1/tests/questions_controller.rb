@@ -3,7 +3,7 @@ class Api::V1::Tests::QuestionsController < Api::V1::BaseController
 
   def index
     questions = @test.questions
-    render json: questions
+    render json: questions, each_serializer: QuestionSerializer
   end
 
   protected
