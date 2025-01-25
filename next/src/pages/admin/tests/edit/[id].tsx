@@ -36,6 +36,7 @@ type TestFormData = {
   minScore: number
   maxScore: number
   avgScore: number
+  status: string
 }
 
 type QuestionProps = {
@@ -44,10 +45,6 @@ type QuestionProps = {
   isReversedScore: boolean
 }
 
-type QuestionFormData = {
-  question_text: string
-  isReversedScore: boolean
-}
 
 const CurrentTestEdit: NextPage = () => {
   useRequireAdminSignedIn()
@@ -111,7 +108,7 @@ const CurrentTestEdit: NextPage = () => {
         avgScore: 0,
         createdAt: '',
         fromToday: '',
-        status: '',
+        status: false,
       }
     }
     return {
@@ -290,6 +287,36 @@ const CurrentTestEdit: NextPage = () => {
     }
   };
 
+  const handleDeleteQuestion = async (questionId: number) => {
+    const headers = {
+      'access-token': localStorage.getItem('access-token'),
+      client: localStorage.getItem('client'),
+      uid: localStorage.getItem('uid'),
+    };
+
+    try {
+      await axios.delete(`${url}/questions/${questionId}`, { headers });
+      setSnackbar({
+        message: '質問を削除しました',
+        severity: 'success',
+        pathname: router.pathname,
+      });
+
+      setQuestionSaved(true);
+    } catch (err) {
+      const errorMessage =
+        err instanceof AxiosError && err.response
+          ? err.response.data.message || '不明なエラーが発生しました'
+          : 'ネットワークエラーが発生しました';
+
+      setSnackbar({
+        message: `フレーズの削除に失敗しました: ${errorMessage}`,
+        severity: 'error',
+        pathname: router.pathname,
+      });
+    }
+  }
+
   if (error) return <Error />
   if (!data || !isFetched) return <Loading />
 
@@ -365,173 +392,184 @@ const CurrentTestEdit: NextPage = () => {
         sx={{ pt: 11, pb: 3, display: 'flex', justifyContent: 'center' }}
       >
         {!previewChecked && (
-          <><Box sx={{ width: 840 }}>
+            <><Box sx={{ width: 840 }}>
             <Box sx={{ mb: 2 }}>
               <Typography>タイトル</Typography>
               <Controller
-                name="title"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    type="text"
-                    error={fieldState.invalid}
-                    helperText={fieldState.error?.message}
-                    placeholder="Write in Title"
-                    fullWidth
-                    sx={{ backgroundColor: 'white' }} />
-                )} />
+              name="title"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TextField
+                {...field}
+                type="text"
+                error={fieldState.invalid}
+                helperText={fieldState.error?.message}
+                placeholder="Write in Title"
+                fullWidth
+                sx={{ backgroundColor: 'white' }} />
+              )} />
             </Box>
             <Box sx={{ mb: 2 }}>
               <Typography>説明</Typography>
               <Controller
-                name="description"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    type="textarea"
-                    error={fieldState.invalid}
-                    helperText={fieldState.error?.message}
-                    multiline
-                    fullWidth
-                    placeholder="Write in Markdown Text"
-                    rows={10}
-                    sx={{ backgroundColor: 'white' }} />
-                )} />
+              name="description"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TextField
+                {...field}
+                type="textarea"
+                error={fieldState.invalid}
+                helperText={fieldState.error?.message}
+                multiline
+                fullWidth
+                placeholder="Write in Markdown Text"
+                rows={10}
+                sx={{ backgroundColor: 'white' }} />
+              )} />
             </Box>
             <Box sx={{ mb: 2 }}>
               <Typography>改善案</Typography>
               <Controller
-                name="improvementSuggestion"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    type="textarea"
-                    error={fieldState.invalid}
-                    helperText={fieldState.error?.message}
-                    multiline
-                    fullWidth
-                    placeholder="Improvement Suggestion in Markdown Text"
-                    rows={10}
-                    sx={{ backgroundColor: 'white' }} />
-                )} />
+              name="improvementSuggestion"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TextField
+                {...field}
+                type="textarea"
+                error={fieldState.invalid}
+                helperText={fieldState.error?.message}
+                multiline
+                fullWidth
+                placeholder="Improvement Suggestion in Markdown Text"
+                rows={10}
+                sx={{ backgroundColor: 'white' }} />
+              )} />
             </Box>
             <Box sx={{ mb: 2 }}>
               <Typography>引用URL</Typography>
               <Controller
-                name="siteUrl"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    type="url"
-                    error={fieldState.invalid}
-                    helperText={fieldState.error?.message}
-                    placeholder="Site URL"
-                    fullWidth
-                    sx={{ backgroundColor: 'white' }} />
-                )} />
+              name="siteUrl"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TextField
+                {...field}
+                type="url"
+                error={fieldState.invalid}
+                helperText={fieldState.error?.message}
+                placeholder="Site URL"
+                fullWidth
+                sx={{ backgroundColor: 'white' }} />
+              )} />
             </Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Box sx={{ flex: 1 }}>
-                <Typography>最低スコア</Typography>
-                <Controller
-                  name="minScore"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <TextField
-                      {...field}
-                      type="number"
-                      error={fieldState.invalid}
-                      helperText={fieldState.error?.message}
-                      placeholder="Minimum Score"
-                      fullWidth
-                      sx={{ backgroundColor: 'white' }} />
-                  )} />
+              <Typography>最低スコア</Typography>
+              <Controller
+                name="minScore"
+                control={control}
+                render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  type="number"
+                  error={fieldState.invalid}
+                  helperText={fieldState.error?.message}
+                  placeholder="Minimum Score"
+                  fullWidth
+                  sx={{ backgroundColor: 'white' }} />
+                )} />
               </Box>
               <Box sx={{ flex: 1 }}>
-                <Typography>最高スコア</Typography>
-                <Controller
-                  name="maxScore"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <TextField
-                      {...field}
-                      type="number"
-                      error={fieldState.invalid}
-                      helperText={fieldState.error?.message}
-                      placeholder="Maximum Score"
-                      fullWidth
-                      sx={{ backgroundColor: 'white' }} />
-                  )} />
+              <Typography>最高スコア</Typography>
+              <Controller
+                name="maxScore"
+                control={control}
+                render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  type="number"
+                  error={fieldState.invalid}
+                  helperText={fieldState.error?.message}
+                  placeholder="Maximum Score"
+                  fullWidth
+                  sx={{ backgroundColor: 'white' }} />
+                )} />
               </Box>
               <Box sx={{ flex: 1 }}>
-                <Typography>平均スコア</Typography>
-                <Controller
-                  name="avgScore"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <TextField
-                      {...field}
-                      type="number"
-                      error={fieldState.invalid}
-                      helperText={fieldState.error?.message}
-                      placeholder="Average Score"
-                      fullWidth
-                      sx={{ backgroundColor: 'white' }} />
-                  )} />
+              <Typography>平均スコア</Typography>
+              <Controller
+                name="avgScore"
+                control={control}
+                render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  type="number"
+                  error={fieldState.invalid}
+                  helperText={fieldState.error?.message}
+                  placeholder="Average Score"
+                  fullWidth
+                  sx={{ backgroundColor: 'white' }} />
+                )} />
               </Box>
             </Box>
               <Box sx={{ mt: 4 }}>
-                <Typography variant="h5">質問一覧</Typography>
-                {questions.map((question) => (
-                  <Card key={question.id} sx={{ mb: 2 }}>
-                    <CardContent>
-                      {editingQuestionId === question.id ? (
-                        <Box>
-                          <TextField
-                            fullWidth
-                            label="質問名"
-                            value={editingQuestionText}
-                            onChange={(e) => setEditingQuestionText(e.target.value)}
-                            autoFocus
-                            sx={{ mb: 2 }}
+              <Typography variant="h5">質問一覧</Typography>
+              {questions.map((question, index) => (
+                <Card key={question.id} sx={{ mb: 2 }}>
+                  <CardContent>
+                    {editingQuestionId === question.id ? (
+                      <Box>
+                        <TextField
+                          fullWidth
+                          label="質問名"
+                          value={editingQuestionText}
+                          onChange={(e) => setEditingQuestionText(e.target.value)}
+                          autoFocus
+                          sx={{ mb: 2 }}
+                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-center' }}>
+                          <Typography>スコア反転</Typography>
+                          <Switch
+                            checked={editingisRevercedScore}
+                            onChange={() => setEditingisRevercedScore(!editingisRevercedScore)}
                           />
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Switch
-                              checked={editingisRevercedScore}
-                              onChange={() => setEditingisRevercedScore(!editingisRevercedScore)}
-                            />
-                            <Typography>スコア反転</Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button onClick={() => handleSaveQuestion(question.id)} color="primary">
-                              保存
-                            </Button>
-                            <Button onClick={handleCancelEdit} color="secondary">
-                              キャンセル
-                            </Button>
-                          </Box>
                         </Box>
-                      ) : (
-                        <Box>
-                          <Typography variant="h6">{question.question_text}</Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                          <Button onClick={() => handleSaveQuestion(question.id)} color="primary" variant="contained">
+                            保存
+                          </Button>
+                          <Button onClick={handleCancelEdit} color="secondary" variant="outlined">
+                            キャンセル
+                          </Button>
+                        </Box>
+                      </Box>
+                    ) : (
+                    <Box>
+                      <Typography variant="h6">{index + 1}. {question.question_text}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Typography>スコア反転: {question.isReversedScore ? 'あり' : 'なし'}</Typography>
-                          <IconButton
-                            edge="end"
-                            onClick={() => handleQuestion(question.id, question.question_text, question.isReversedScore)}
-                            sx={{ ml: 1 }}
-                          >
-                            編集
-                          </IconButton>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                              onClick={() => handleQuestion(question.id, question.question_text, question.isReversedScore)}
+                              color="primary"
+                              variant="contained"
+                            >
+                              編集
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteQuestion(question.id)}
+                              color="error"
+                              variant="contained"
+                            >
+                              削除
+                            </Button>
+                          </Box>
                         </Box>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-                {/* 新しいフレーズを追加 */}
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+              {/* 新しいフレーズを追加 */}
                 <Card sx={{ mb: 2 }}>
                   <CardContent>
                     <Typography variant="h6">新しい質問を追加</Typography>
@@ -542,16 +580,16 @@ const CurrentTestEdit: NextPage = () => {
                       onChange={(e) => setCreatingQuestionText(e.target.value)}
                       sx={{ mb: 2 }}
                     />       
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+                      <Typography>スコア反転</Typography>
                       <Switch
                         checked={creatingisRevercedScore}
                         onChange={() => setCreatingisRevercedScore(!creatingisRevercedScore)}
                       />
-                      <Typography>スコア反転</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button onClick={() => handleCreateQuestion()} color="primary">
-                        保存
+                      <Button onClick={() => handleCreateQuestion()} color="primary" variant="contained">
+                      保存
                       </Button>
                     </Box>
                   </CardContent>
@@ -587,6 +625,18 @@ const CurrentTestEdit: NextPage = () => {
                 <MarkdownText content={`- 引用URL:${watch('siteUrl')}`} />
               </Box>
             </Card>
+            {/* 各質問を表示 */}
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h5">質問一覧</Typography>
+              {questions.map((question, index) => (
+                <Card key={question.id} sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Typography variant="h6">{index + 1}. {question.question_text}</Typography>
+                    <Typography>スコア反転: {question.isReversedScore ? 'あり' : 'なし'}</Typography>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
           </Box>
         )}
       </Container>
