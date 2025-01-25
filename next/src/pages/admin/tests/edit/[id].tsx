@@ -18,7 +18,7 @@ import type { NextPage } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState, useMemo } from 'react'
-import { useForm, SubmitHandler, Controller, useFormContext } from 'react-hook-form'
+import { useForm, SubmitHandler, Controller } from 'react-hook-form'
 import useSWR from 'swr'
 import Error from '@/components/Error'
 import Loading from '@/components/Loading'
@@ -27,19 +27,6 @@ import { useAdminState, useSnackbarState } from '@/hooks/useGlobalState'
 import { useRequireAdminSignedIn } from '@/hooks/useRequireSignedIn'
 import { fetcher } from '@/utils'
 
-type TestProps = {
-  id: number
-  title: string
-  description: string
-  siteUrl: string
-  improvementSuggestion: string
-  minScore: number
-  maxScore: number
-  avgScore: number
-  createdAt: string
-  fromToday: string
-  status: string
-}
 
 type TestFormData = {
   title: string
@@ -75,7 +62,7 @@ const CurrentTestEdit: NextPage = () => {
   const [editingQuestionText, setEditingQuestionText] = useState<string>('');
   const [questions, setQuestions] = useState<QuestionProps[]>([]);
   const [editingisRevercedScore, setEditingisRevercedScore] = useState<boolean>(false);
-  const [creatingQuestionId, setCreatingQuestionId] = useState<number | null>(null);
+  const [, setCreatingQuestionId] = useState<number | null>(null);
   const [creatingQuestionText, setCreatingQuestionText] = useState<string>('');
   const [creatingisRevercedScore, setCreatingisRevercedScore] = useState<boolean>(false);
   const [questionSaved, setQuestionSaved] = useState(false);
@@ -244,6 +231,7 @@ const CurrentTestEdit: NextPage = () => {
       setEditingQuestionId(null);
       setEditingQuestionText('');
       setEditingisRevercedScore(false);
+      setQuestionSaved(true);
     } catch (err) {
       const errorMessage =
         err instanceof AxiosError && err.response
@@ -274,8 +262,8 @@ const CurrentTestEdit: NextPage = () => {
     try {
       await axios.post(`${url}/questions`, {
         question: {
-          question_text: editingQuestionText,
-          isReversedScore: editingisRevercedScore,
+          question_text: creatingQuestionText,
+          isReversedScore: creatingisRevercedScore,
         },
       }, { headers });
       setSnackbar({
@@ -287,6 +275,7 @@ const CurrentTestEdit: NextPage = () => {
       setCreatingQuestionId(null);
       setCreatingQuestionText('');
       setCreatingisRevercedScore(false);
+      setQuestionSaved(true);
     } catch (err) {
       const errorMessage =
         err instanceof AxiosError && err.response
@@ -518,7 +507,7 @@ const CurrentTestEdit: NextPage = () => {
                             <Typography>スコア反転</Typography>
                           </Box>
                           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button onClick={() => handleSaveQuestion(question.id, question.question_text, question.isReversedScore)} color="primary">
+                            <Button onClick={() => handleSaveQuestion(question.id)} color="primary">
                               保存
                             </Button>
                             <Button onClick={handleCancelEdit} color="secondary">
