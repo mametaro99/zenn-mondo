@@ -17,7 +17,7 @@ import {
 import Image from 'next/image'
 import Link from 'next/link'
 import axios, { AxiosResponse, AxiosError } from 'axios'
-import router, { useRouter } from 'next/router'
+import { useRouter } from 'next/router'
 import { useState } from 'react'
 import { useUserState, useAdminState } from '@/hooks/useGlobalState'
 
@@ -29,7 +29,7 @@ const Header = () => {
 
   const router = useRouter()
 
-   const hideHeaderPathnames = ['/current/articles/edit/[id]']
+   const hideHeaderPathnames = ['/admin/tests/edit/[id]']
    if (hideHeaderPathnames.includes(router.pathname)) return <></>
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
