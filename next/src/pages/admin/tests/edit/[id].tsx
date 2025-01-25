@@ -115,7 +115,7 @@ const CurrentTestEdit: NextPage = () => {
       setStatusChecked(test.status == '公開中')
       setIsFetched(true)
     }
-  }, [data, test, reset])
+  }, [data, reset])
 
   const onSubmit: SubmitHandler<TestFormData> = (data) => {
     if (data.title == '') {
@@ -267,7 +267,7 @@ const CurrentTestEdit: NextPage = () => {
                 )}
               />
             </Box>
-            <Box>
+            <Box sx={{ mb: 2 }}>
               <Controller
                 name="description"
                 control={control}
@@ -280,7 +280,94 @@ const CurrentTestEdit: NextPage = () => {
                     multiline
                     fullWidth
                     placeholder="Write in Markdown Text"
-                    rows={25}
+                    rows={10}
+                    sx={{ backgroundColor: 'white' }}
+                  />
+                )}
+              />
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Controller
+                name="siteUrl"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    {...field}
+                    type="url"
+                    error={fieldState.invalid}
+                    helperText={fieldState.error?.message}
+                    placeholder="Site URL"
+                    fullWidth
+                    sx={{ backgroundColor: 'white' }}
+                  />
+                )}
+              />
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Controller
+                name="improvementSuggestion"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    {...field}
+                    type="textarea"
+                    error={fieldState.invalid}
+                    helperText={fieldState.error?.message}
+                    multiline
+                    fullWidth
+                    placeholder="Improvement Suggestion in Markdown Text"
+                    rows={10}
+                    sx={{ backgroundColor: 'white' }}
+                  />
+                )}
+              />
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Controller
+                name="minScore"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    {...field}
+                    type="number"
+                    error={fieldState.invalid}
+                    helperText={fieldState.error?.message}
+                    placeholder="Minimum Score"
+                    fullWidth
+                    sx={{ backgroundColor: 'white' }}
+                  />
+                )}
+              />
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Controller
+                name="maxScore"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    {...field}
+                    type="number"
+                    error={fieldState.invalid}
+                    helperText={fieldState.error?.message}
+                    placeholder="Maximum Score"
+                    fullWidth
+                    sx={{ backgroundColor: 'white' }}
+                  />
+                )}
+              />
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Controller
+                name="avgScore"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    {...field}
+                    type="number"
+                    error={fieldState.invalid}
+                    helperText={fieldState.error?.message}
+                    placeholder="Average Score"
+                    fullWidth
                     sx={{ backgroundColor: 'white' }}
                   />
                 )}
@@ -310,6 +397,19 @@ const CurrentTestEdit: NextPage = () => {
                 }}
               >
                 <MarkdownText content={watch('description')} />
+                <Typography
+                  component="h3"
+                  sx={{
+                    fontSize: { xs: 18, sm: 22 },
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    pt: 2,
+                    pb: 4,
+                  }}
+                >
+                  Improvement Suggestion
+                </Typography>
+                <MarkdownText content={watch('improvementSuggestion')} />
               </Box>
             </Card>
           </Box>
