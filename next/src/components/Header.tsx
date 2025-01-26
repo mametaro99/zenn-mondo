@@ -79,7 +79,7 @@ const Header = () => {
           <Box>
             {admin.isSignedIn ? (
               <Link href="/admin/home">
-                <Image src="/logo1.png" width={150} height={60} alt="logo" />
+                <Image src="/logo_admin.png" width={150} height={60} alt="logo" />
               </Link>
             ) : (
               <Link href="/">
@@ -181,7 +181,7 @@ const Header = () => {
                       }}
                       onClick={addNewArticle}
                     >
-                      Add new
+                      CreateTest
                     </Button>
                     <IconButton onClick={handleClick} sx={{ p: 0 }}>
                       <Avatar>
