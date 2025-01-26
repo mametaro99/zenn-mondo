@@ -26,6 +26,7 @@ import MarkdownText from '@/components/MarkdownText'
 import { useAdminState, useSnackbarState } from '@/hooks/useGlobalState'
 import { useRequireAdminSignedIn } from '@/hooks/useRequireSignedIn'
 import { fetcher } from '@/utils'
+import camelcaseKeys from 'camelcase-keys'
 
 
 type TestFormData = {
@@ -96,6 +97,9 @@ const CurrentTestEdit: NextPage = () => {
   }, [questionsData])
 
   const test = useMemo(() => {
+    const camelcasedData = camelcaseKeys(data, { deep: true })
+    console.log(camelcasedData)
+
     if (!data) {
       return {
         id: 0,
@@ -112,17 +116,17 @@ const CurrentTestEdit: NextPage = () => {
       }
     }
     return {
-      id: data.id,
-      title: data.title == null ? '' : data.title,
-      description: data.description == null ? '' : data.description,
-      siteUrl: data.siteUrl == null ? '' : data.siteUrl,
-      improvementSuggestion: data.improvementSuggestion == null ? '' : data.improvementSuggestion,
-      minScore: data.minScore,
-      maxScore: data.maxScore,
-      avgScore: data.avgScore,
-      createdAt: data.createdAt,
-      fromToday: data.fromToday,
-      status: data.status,
+      id: camelcasedData.id,
+      title: camelcasedData.title == null ? '' : camelcasedData.title,
+      description: camelcasedData.description == null ? '' : camelcasedData.description,
+      siteUrl: camelcasedData.siteUrl == null ? '' : camelcasedData.siteUrl,
+      improvementSuggestion: camelcasedData.improvementSuggestion == null ? '' : camelcasedData.improvementSuggestion,
+      minScore: camelcasedData.minScore,
+      maxScore: camelcasedData.maxScore,
+      avgScore: camelcasedData.avgScore,
+      createdAt: camelcasedData.createdAt,
+      fromToday: camelcasedData.fromToday,
+      status: camelcasedData.status,
     }
   }, [data])
 
@@ -168,8 +172,18 @@ const CurrentTestEdit: NextPage = () => {
     }
 
     const status = statusChecked ? 'published' : 'draft'
-
-    const patchData = { test: { ...data, status: status } }
+    const patchData = {
+      test: {
+        title: data.title,
+        description: data.description,
+        site_url: data.siteUrl,
+        improvement_suggestion: data.improvementSuggestion,
+        min_score: data.minScore,
+        max_score: data.maxScore,
+        avg_score: data.avgScore,
+        status: status,
+      },
+    }
 
     axios({
       method: 'PATCH',
@@ -417,7 +431,7 @@ const CurrentTestEdit: NextPage = () => {
               render={({ field, fieldState }) => (
                 <TextField
                 {...field}
-                type="textarea"
+                type="text"
                 error={fieldState.invalid}
                 helperText={fieldState.error?.message}
                 multiline
