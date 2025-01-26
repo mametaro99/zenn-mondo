@@ -41,14 +41,20 @@ const CurrentAdminTests: NextPage = () => {
   console.log(tests)
 
   return (
-    <Box
-      css={styles.pageMinHeight}
-      sx={{
-        borderTop: '0.5px solid #acbcc7',
-        pb: 8,
-      }}
-    >
-      <Container maxWidth="md" sx={{ pt: 6, px: 4 }}>
+    <Box css={styles.pageMinHeight} sx={{
+      backgroundImage: `url('/temp.jpg')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      backgroundColor: '#f4f4f4',
+      animation: 'fadeIn 1.5s ease-in-out',
+      '@keyframes fadeIn': {
+        from: { opacity: 0 },
+        to: { opacity: 1 },
+      }
+    }}>
+      <br></br>
+      <Container maxWidth="md" sx={{ pt: 6, px: 4, backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
         <Box sx={{ mb: 4 }}>
           <Typography component="h2" sx={{ fontSize: 32, fontWeight: 'bold' }}>
             テストの管理
