@@ -1,4 +1,4 @@
-import { LoadingButton } from '@mui/lab'
+import { LoadingButton } from '@mui/lab';
 import {
   Box,
   FormControl,
@@ -7,103 +7,92 @@ import {
   Radio,
   RadioGroup,
   Typography,
-} from '@mui/material'
-import axios, { AxiosError } from 'axios'
-import camelcaseKeys from 'camelcase-keys'
-import type { NextPage } from 'next'
-import { useRouter } from 'next/router'
-import React, { useState } from 'react'
-import useSWR from 'swr'
-import Error from '@/components/Error'
-import Loading from '@/components/Loading'
-import { useSnackbarState, useUserState } from '@/hooks/useGlobalState'
-import { useRequireSignedIn } from '@/hooks/useRequireSignedIn'
-import { styles } from '@/styles'
-import { fetcher } from '@/utils'
-
+} from '@mui/material';
+import axios, { AxiosError } from 'axios';
+import camelcaseKeys from 'camelcase-keys';
+import type { NextPage } from 'next';
+import { useRouter } from 'next/router';
+import React, { useState } from 'react';
+import useSWR from 'swr';
+import Error from '@/components/Error';
+import Loading from '@/components/Loading';
+import { useSnackbarState, useUserState } from '@/hooks/useGlobalState';
+import { useRequireSignedIn } from '@/hooks/useRequireSignedIn';
+import { styles } from '@/styles';
+import { fetcher } from '@/utils';
 
 type TestQuestionProps = {
-  id: number
-  questionText: string
-  isReversedScore: boolean
-}
+  id: number;
+  questionText: string;
+  isReversedScore: boolean;
+};
 
 type TestProps = {
-  id: number
-  title: string
-  description: string
-  minScore: number
-  maxScore: number
-}
+  id: number;
+  title: string;
+  description: string;
+  minScore: number;
+  maxScore: number;
+};
 
 const QuestionForm: NextPage = () => {
-  const router = useRouter()
-  // router.isReadyでクエリが準備できているかを確認
+  const router = useRouter();
   if (!router.isReady) {
-    return <Loading />
+    return <Loading />;
   }
-  
-  useRequireSignedIn()
-  const [user] = useUserState()
-  const [, setSnackbar] = useSnackbarState()
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<{ [key: number]: string }>({}) // エラー状態を追加
 
-  const { id } = router.query
+  useRequireSignedIn();
+  const [user] = useUserState();
+  const [, setSnackbar] = useSnackbarState();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: number]: string }>({});
 
+  const { id } = router.query;
+  const testUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/tests/${id}`;
+  const questionsUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/tests/${id}/questions`;
 
-  // URLを常に生成
-  const testUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/tests/${id}`
-  const questionsUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/tests/${id}/questions`
+  const { data: testData, error: testError } = useSWR(testUrl, fetcher);
+  const { data: questionsData, error: questionsError } = useSWR(questionsUrl, fetcher);
 
-  // フックの呼び出しは条件付きにしない
-  const { data: testData, error: testError } = useSWR(testUrl, fetcher)
-  const { data: questionsData, error: questionsError } = useSWR(questionsUrl, fetcher)
+  const [scores, setScores] = useState<{ [key: number]: number | null }>({});
 
-  // ユーザーのスコアを保持するための状態
-  const [scores, setScores] = useState<{ [key: number]: number }>({})
-
-  // スコア変更のハンドラ
   const handleScoreChange = (questionId: number, score: number) => {
-    setScores((prevScores) => ({ ...prevScores, [questionId]: score }))
-    setErrors((prevErrors) => ({ ...prevErrors, [questionId]: '' })) // スコア変更時にエラーをリセット
-  }
+    setScores((prevScores) => ({ ...prevScores, [questionId]: score }));
+    setErrors((prevErrors) => ({ ...prevErrors, [questionId]: '' }));
+  };
 
-  // user.isSignedInの状態に応じたエラーハンドリング
   if (!user.isSignedIn) {
-    return <Error />
+    return <Error />;
   }
 
-  if (testError || questionsError) return <Error />
-  if (!testData || !questionsData) return <Loading />
+  if (testError || questionsError) return <Error />;
+  if (!testData || !questionsData) return <Loading />;
 
-  const test: TestProps = camelcaseKeys(testData)
-  const questions: TestQuestionProps[] = camelcaseKeys(questionsData)
+  const test: TestProps = camelcaseKeys(testData);
+  const questions: TestQuestionProps[] = camelcaseKeys(questionsData);
 
-  // フォームの送信処理
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsLoading(true); // ローディング開始
+    setIsLoading(true);
 
-    const userId = user.id; // ユーザーIDを取得
-
+    const userId = user.id;
     const payload = {
       user_id: userId,
       test_id: test.id,
       scores,
     };
 
-    const validationErrors: { [key: number]: string } = {}
+    const validationErrors: { [key: number]: string } = {};
     questions.forEach((question) => {
-      if (!(question.id in scores)) {
-        validationErrors[question.id] = 'この質問に回答してください。'
+      if (scores[question.id] == null) {
+        validationErrors[question.id] = 'この質問に回答してください。';
       }
-    })
+    });
 
     if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors)
-      setIsLoading(false) // エラー時はローディング停止
-      return
+      setErrors(validationErrors);
+      setIsLoading(false);
+      return;
     }
 
     const headers = {
@@ -114,30 +103,27 @@ const QuestionForm: NextPage = () => {
     };
 
     try {
-      // Axiosを使ってデータを送信
       await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/current/tests/${test.id}/test_answers`, payload, {
         headers: headers,
       });
 
-      // 成功したらリダイレクト
       setSnackbar({
         message: '回答を送信しました',
         severity: 'success',
         pathname: '/tests/[id]',
-      })
+      });
       router.push(`/tests/${test.id}`);
     } catch (err) {
       const error = err as AxiosError<{ error: string }>;
       console.error('Submission error:', error.message);
       setSnackbar({
         message: '回答の送信に失敗しました',
-        severity: 'success',
+        severity: 'error',
         pathname: '/tests/[id]/questionForm',
-      })
-      setIsLoading(false); // エラー時はローディング停止
+      });
+      setIsLoading(false);
     }
   };
-
 
   return (
     <Box
@@ -147,71 +133,65 @@ const QuestionForm: NextPage = () => {
         pb: 8,
         px: 2,
         pt: 5,
-        display: 'flex', // フレックスボックスを使用
-        justifyContent: 'center', // 水平方向の中央配置
-        alignItems: 'center', // 垂直方向の中央配置
-        flexDirection: 'column', // 縦に並べる
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column',
       }}
     >
-      <Typography variant="h4" sx={{ mb: 4 }}>
+      <Typography variant="h4" sx={{ mb: 4, textAlign: 'center' }}>
         {test.title}
       </Typography>
-  
-      <Typography sx={{ mb: 4 }}>
+
+      <Typography sx={{ mb: 4, textAlign: 'center', maxWidth: 600 }}>
         以下の質問について、{test.minScore}(あてはまらない)～{test.maxScore}(あてはまる)の間の数字で回答してください。
       </Typography>
-  
-      <Typography variant="body2" sx={{ mb: 2 }}>
-        あてはまる: {test.maxScore}点
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 4 }}>
-        あてはまらない: {test.minScore}点
-      </Typography>
-  
-      <form onSubmit={handleSubmit}>
-        <Box sx={{ display: "flex", flexDirection: "column" }}>
-          {questions.map((question, index) => (
-            <FormControl key={question.id} component="fieldset" sx={{ mb: 3 }} error={!!errors[question.id]}>
-              <Typography variant="body1">
-                {index + 1}. {question.questionText}
-              </Typography>
+
+      <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: 800 }}>
+        {questions.map((question, index) => (
+          <Box key={question.id} sx={{ mb: 2, p: 3, border: '1px solid #e0e0e0', borderRadius: 2 }}> 
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {index + 1}. {question.questionText}
+            </Typography>
+            <FormControl component="fieldset" error={!!errors[question.id]} fullWidth>
               <RadioGroup
                 row
-                value={scores[question.id] || ''}
+                value={scores[question.id] ?? ''}
                 onChange={(e) => handleScoreChange(question.id, Number(e.target.value))}
+                sx={{ justifyContent: 'flex-end' }}
               >
                 {[...Array(test.maxScore - test.minScore + 1)].map((_, idx) => {
-                  const scoreValue = test.minScore + idx
+                  const scoreValue = test.minScore + idx;
                   return (
                     <FormControlLabel
                       key={scoreValue}
+                      value={scoreValue}
                       control={<Radio />}
                       label={scoreValue.toString()}
-                      value={scoreValue}
                     />
-                  )
+                  );
                 })}
               </RadioGroup>
               {errors[question.id] && (
                 <FormHelperText>{errors[question.id]}</FormHelperText>
               )}
             </FormControl>
-          ))}
+          </Box>
+        ))}
+
+        <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <LoadingButton
+            type="submit"
+            loading={isLoading}
+            variant="contained"
+            color="primary"
+          >
+            回答を送信
+          </LoadingButton>
         </Box>
-  
-        <LoadingButton
-          type="submit"
-          loading={isLoading}
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2 }} // スペースを確保
-        >
-          Submit Answers
-        </LoadingButton>
       </form>
     </Box>
-  )
-  
-}
+  );
+};
 
-export default QuestionForm
+export default QuestionForm;
