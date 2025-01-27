@@ -1,6 +1,8 @@
 # ユーザーのサンプルデータ作成
 user1 = User.create!(email: "user1@example.com", password: "password123", name: "ユーザー1")
 user2 = User.create!(email: "user2@example.com", password: "password123", name: "ユーザー2")
+admin = Admin.create!(email: "admin@example.com", password: "password123", name: "博士太郎")
+
 
 
 # テストのサンプルデータ作成
@@ -13,7 +15,9 @@ test1 = Test.create!(
   max_score: 5,
   avg_score: 3.5,  # 仮の平均スコア
   created_at: Time.now,
-  updated_at: Time.now
+  updated_at: Time.now,
+  admin: admin,
+  status: 30
 )
 
 
@@ -142,7 +146,9 @@ test2 = Test.create!(
   max_score: 4,
   avg_score: 2.5,  # 仮の平均スコア
   created_at: Time.now,
-  updated_at: Time.now
+  updated_at: Time.now,
+  admin: admin,
+  status: 30
 )
 
 
@@ -223,7 +229,9 @@ test3 = Test.create!(
   max_score: 5,
   avg_score: 2.8,  # 仮の平均スコア
   created_at: Time.now,
-  updated_at: Time.now
+  updated_at: Time.now,
+  admin: admin,
+  status: 30
 )
 
 # 質問のサンプルデータ作成 (自己概念に関する質問)
