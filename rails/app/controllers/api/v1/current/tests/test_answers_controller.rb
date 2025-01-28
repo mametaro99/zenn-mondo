@@ -27,6 +27,12 @@ class Api::V1::Current::Tests::TestAnswersController < Api::V1::BaseController
       render json: { errors: @test_answer.errors.full_messages }, status: :unprocessable
     end
   end
+  
+  # 一つのテストに紐づく回答をすべて表示する
+  def all_index
+    @test_answers = TestAnswer.where(test: @test)
+    render json: @test_answers, each_serializer: CurrentTestAnswerSerializer
+  end
 
   private
 
