@@ -1,6 +1,7 @@
 class Api::V1::Current::Tests::TestAnswersController < Api::V1::BaseController
   before_action :set_test
   before_action :authenticate_user!, only: [:create]
+  before_action :authenticate_admin!, only: [:all_index]
 
   def index
     @test_answers = TestAnswer.where(user: current_user, test: @test)
