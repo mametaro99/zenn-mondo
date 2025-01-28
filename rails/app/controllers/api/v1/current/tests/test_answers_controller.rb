@@ -31,6 +31,10 @@ class Api::V1::Current::Tests::TestAnswersController < Api::V1::BaseController
   
   # 一つのテストに紐づく回答をすべて表示する
   def all_index
+    if current_admin != @test.admin
+      render json: { errors: 'You do not have permission to view this test answers' }, status: :forbidden
+      return
+    end
     @test_answers = TestAnswer.where(test: @test)
     render json: @test_answers, each_serializer: CurrentTestAnswerSerializer
   end
