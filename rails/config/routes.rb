@@ -27,7 +27,11 @@ Rails.application.routes.draw do
           collection do
             get :admin_index
           end
-          resources :test_answers, only: [:index, :create], module: :tests
+          resources :test_answers, only: [:index, :create], module: :tests do
+            collection do
+              get :all_index
+            end
+          end
           resources :questions, only: [:create, :update, :destroy], module: :tests
         end
         resource :user, only: [:show]
