@@ -35,7 +35,7 @@ class Api::V1::Current::Tests::TestAnswersController < Api::V1::BaseController
       render json: { errors: 'You do not have permission to view this test answers' }, status: :forbidden
       return
     end
-    @test_answers = TestAnswer.where(test: @test)
+    @test_answers = TestAnswer.where(test: @test).includes(:test_answer_details)
     render json: @test_answers, each_serializer: CurrentTestAnswerSerializer
   end
 
