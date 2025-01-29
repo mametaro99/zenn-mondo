@@ -138,6 +138,74 @@ RailsControllerで定義するメソッドを、[CROD設計](https://zenn.dev/co
 
 ![alt text](reverse.png)
 
+### 3.N+1問題を解決
+
+あるテスト回答結果の一覧を取得する以下のadd_index関数にて、N+1問題が起こっていました。
+
+```ruby:rails/app/controllers/api/v1/current/tests/test_answers_controller.rb
+def all_index
+    ...
+    @test_answers = TestAnswer.where(test: @test) #　←ここで、N+１問題が発生
+    render json: @test_answers, each_serializer: CurrentTestAnswerSerializer
+  end
+```
+
+実行結果
+
+```ruby
+ TestAnswer Load (0.8ms)  SELECT `test_answers`.* FROM `test_answers` WHERE `test_answers`.`test_id` = 3
+  ↳ app/controllers/api/v1/current/tests/test_answers_controller.rb:39:in `all_index'
+[active_model_serializers]   TestAnswerDetail Load (0.7ms)  SELECT `test_answer_details`.* FROM `test_answer_details` WHERE `test_answer_details`.`test_answer_id` = 5
+[active_model_serializers]   ↳ app/controllers/api/v1/current/tests/test_answers_controller.rb:39:in `all_index'
+[active_model_serializers] No serializer found for resource: #<TestAnswerDetail id: 25, test_answer_id: 5, score: 2, question_id: 21, created_at: "2025-01-29 04:08:36.614623000 +0000", updated_at: "2025-01-29 04:08:36.614623000 +0000">
+[active_model_serializers]   TestAnswerDetail Load (0.9ms)  SELECT `test_answer_details`.* FROM `test_answer_details` WHERE `test_answer_details`.`test_answer_id` = 6
+[active_model_serializers]   ↳ app/controllers/api/v1/current/tests/test_answers_controller.rb:39:in `all_index'
+```
+
+上記のように、TestAnswer（回答結果）のレコード(id=5,6)ごとに、TestAnswerDetailsの検索クエリが発行されていて、N+1問題が起こっています。
+
+[N+1問題とは、データベースから取得した1つのレコードに対して、関連するデータを取得するために、関連するテーブルに対して複数のSQLクエリを発行してしまう問題のこと](https://qiita.com/disk042/items/ce0ea1774c29cb981df2#:~:text=2023%2D03%2D30-,N%2B1%E5%95%8F%E9%A1%8C%E3%81%A8%E3%81%AF,%E8%80%83%E3%81%88%E3%81%A6%E3%81%BF%E3%81%BE%E3%81%97%E3%82%87%E3%81%86%E3%80%82)です。N+1問題が起こると、重複した不要なクエリが何度も発行されるためにメモリの使用量が増えたり、データベースの問合せ回数の増加により、応答時間が増えたりしてアプリケーションのパフォーマンスが下がってしまいます。
+今回の場合は、以下の流れでN+1問題が起こってしまいます。
+
+
+- ある一つのTest(テスト)に紐づく、すべてのTestAnswer(回答結果)を検索するクエリが発行される。
+- 一件目のTestAnswer(回答結果)に紐づく、すべての質問の回答結果の詳細（TestAnswerDetails）を検索するクエリが発行される。
+- 二件目のTestAnswer(回答結果)に紐づく、すべての質問の回答結果の詳細（TestAnswerDetails）を検索するクエリが発行される。
+- 三件目...(すべての回答結果の件数だけ、内容のクエリが発行される)
+
+上記のように、回答結果の数Nだけ、すべての質問の回答詳細を検索するクエリが発行され、N+1問題が発生してしまいます。
+
+これを解消するために、以下のようにincludes関数を使ってN+1の問題を解消しました。
+
+```ruby:rails/app/controllers/api/v1/current/tests/test_answers_controller.rb
+def all_index
+    ...
+    @test_answers = TestAnswer.where(test: @test).includes(:test_answer_details) #　←ここで、N+１問題が発生が発生していたためincludesを追加
+    render json: @test_answers, each_serializer: CurrentTestAnswerSerializer
+  end
+```
+
+実行結果
+
+```ruby
+TestAnswer Load (0.7ms)  SELECT `test_answers`.* FROM `test_answers` WHERE `test_answers`.`test_id` = 3
+  ↳ app/controllers/api/v1/current/tests/test_answers_controller.rb:39:in `all_index'
+  TestAnswerDetail Load (1.1ms)  SELECT `test_answer_details`.* FROM `test_answer_details` WHERE `test_answer_details`.`test_answer_id` IN (5, 6)
+  ↳ app/controllers/api/v1/current/tests/test_answers_controller.rb:39:in `all_index'
+```
+上記の結果のように、２回クエリが発行されるだけで処理が終了しています。
+
+
+includes関数を追加することで以下のようにクエリが発行されるようになります。
+
+- ある一つのTest(テスト)に紐づく、すべてのTestAnswer(回答結果)を検索するクエリが発行される。
+- 上記で取得したTestAnswerに紐づく、すべての質問の回答結果の詳細（TestAnswerDetails）を取得する。
+
+上記の流れで本来、取得した回答結果の数Nだけ、クエリが叩かれていたものの、２件に止めることができました。
+これによって、メモリの使用量の削減や、パフォーマンスアップを向上させることができました。
+
+
+
 
 ## 工夫したところ　【フロントエンド】
 
