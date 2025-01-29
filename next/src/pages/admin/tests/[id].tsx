@@ -46,15 +46,24 @@ const CurrentArticleDetail: NextPage = () => {
   const router = useRouter()
   const url = process.env.NEXT_PUBLIC_API_BASE_URL + '/current/tests/'
   const { id } = router.query
+  const test_answer_url = process.env.NEXT_PUBLIC_API_BASE_URL + `/current/tests/${id}/test_answers/all_index`
 
   const { data, error } = useSWR(
     admin.isSignedIn && id ? url + id : null,
     fetcher,
   )
+
+  const { data: answer_data, error: answer_error } = useSWR(
+    admin.isSignedIn && id ? test_answer_url : null,
+    fetcher,
+  )
+
   if (error) return <Error />
   if (!data) return <Loading />
   
   const test: CurrentTestProps = camelcaseKeys(data)
+
+  console.log(answer_data)
 
   return (
     <Box
