@@ -20,6 +20,7 @@ import { useRouter } from 'next/router'
 import useSWR from 'swr'
 import Error from '@/components/Error'
 import Loading from '@/components/Loading'
+import HistogramChart from "@/components/HistogramChart";
 import MarkdownText from '@/components/MarkdownText'
 import { useAdminState } from '@/hooks/useGlobalState'
 import { useRequireAdminSignedIn } from '@/hooks/useRequireSignedIn'
@@ -224,9 +225,18 @@ const CurrentArticleDetail: NextPage = () => {
                         mt: 2,
                       }}
                     >
-                      テストの回答結果は以下の通りです。個のヒストグラムでは、各回答結果の平均点の分布を表示しています。
+                      テストの回答結果は以下の通りです。このヒストグラムでは、各回答結果の平均点の分布を表示しています。
                     </Typography>
                   </Box>
+
+                  {/* ここにヒストグラムを表示する */}
+                  {answer_data && typeof test.maxScore === 'number' && typeof test.minScore === 'number' && (
+                    <HistogramChart
+                      maxScore={test.maxScore} // 最大スコア
+                      minScore={test.minScore} // 最小スコア
+                      averages={answer_data.map((d) => d.average)} // 各平均スコアのリスト
+                    />
+                  )}
                 </Box>
               </Card>
             </Box>
