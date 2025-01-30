@@ -53,7 +53,13 @@ const HistogramChart: React.FC<HistogramChartProps> = ({ maxScore, minScore, ave
     responsive: true,
     scales: {
       x: { title: { display: true, text: "平均点" } },
-      y: { title: { display: true, text: "人数" }, beginAtZero: true },
+      y: { 
+        title: { display: true, text: "人数" }, 
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+        },
+      },
     },
   };
 
