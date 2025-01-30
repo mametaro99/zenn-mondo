@@ -59,6 +59,7 @@ const CurrentArticleDetail: NextPage = () => {
   )
 
   if (error) return <Error />
+  if (answer_error) return <Error />
   if (!data) return <Loading />
   
   const test: CurrentTestProps = camelcaseKeys(data)
@@ -179,6 +180,56 @@ const CurrentArticleDetail: NextPage = () => {
                 <MarkdownText content={test.description} />
               </Box>
             </Card>
+            {/* 新たに、このテストの回答結果のヒストグラムを棒グラフで表示する */}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0 24px',
+                width: '100%',
+                mt: 4,
+              }}
+            >
+
+              <Card
+                sx={{
+                  boxShadow: 'none',
+                  borderRadius: '12px',
+                  maxWidth: 840,
+                  m: '0 auto',
+                }}
+              >
+                <Box
+                  sx={{
+                    padding: { xs: '0 24px 24px 24px', sm: '0 40px 40px 40px' },
+                    marginTop: { xs: '24px', sm: '40px' },
+                  }}
+                >
+                  <Typography
+                    component="h3"
+                    sx={{
+                      fontSize: { xs: 16, sm: 18 },
+                      color: 'black',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    テストの回答結果
+                  </Typography>
+                  <Box>
+                    <Typography
+                      component="p"
+                      sx={{
+                        fontSize: 14,
+                        color: '#6e7b85',
+                        mt: 2,
+                      }}
+                    >
+                      テストの回答結果は以下の通りです。個のヒストグラムでは、各回答結果の平均点の分布を表示しています。
+                    </Typography>
+                  </Box>
+                </Box>
+              </Card>
+            </Box>
           </Box>
           <Box
             sx={{
