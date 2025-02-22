@@ -1,25 +1,18 @@
-import ArrowBackSharpIcon from '@mui/icons-material/ArrowBackSharp'
-import { LoadingButton } from '@mui/lab'
 import {
-  AppBar,
   Box,
   Button,
   Card,
   CardContent,
   Container,
-  IconButton,
   Switch,
   TextField,
-  Toolbar,
   Typography,
 } from '@mui/material'
 import axios, { AxiosError } from 'axios'
 import type { NextPage } from 'next'
-import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState, useMemo } from 'react'
 import { useForm, SubmitHandler, Controller } from 'react-hook-form'
-import useSWR from 'swr'
 import Error from '@/components/Error'
 import Loading from '@/components/Loading'
 import MarkdownText from '@/components/MarkdownText'
@@ -27,9 +20,14 @@ import { useAdminState, useSnackbarState } from '@/hooks/useGlobalState'
 import { useRequireAdminSignedIn } from '@/hooks/useRequireSignedIn'
 import { fetcher } from '@/utils'
 import camelcaseKeys from 'camelcase-keys'
-
+import TestEditHeader from '@/components/TestEditHeader'
+import { useTestData } from '@/hooks/useTestData'
+import { useTestQuestions } from '@/hooks/useTestQuestions'
+import { useQuestionManager } from '@/hooks/useQuestionManager'
+import TestForm from '@/components/TestEditForm'
 
 type TestFormData = {
+  id?: string
   title: string
   description: string
   siteUrl: string
@@ -38,7 +36,10 @@ type TestFormData = {
   maxScore: number
   avgScore: number
   status: string
+  createdAt: string
+  fromToday: string
 }
+
 
 type QuestionProps = {
   id: number
@@ -51,19 +52,10 @@ const CurrentTestEdit: NextPage = () => {
   useRequireAdminSignedIn()
   const router = useRouter()
   const [user] = useAdminState()
-  const [, setSnackbar] = useSnackbarState()
   const [previewChecked, setPreviewChecked] = useState<boolean>(false)
   const [statusChecked, setStatusChecked] = useState<boolean>(false)
-  const [isFetched, setIsFetched] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
-  const [editingQuestionText, setEditingQuestionText] = useState<string>('');
-  const [questions, setQuestions] = useState<QuestionProps[]>([]);
-  const [editingisRevercedScore, setEditingisRevercedScore] = useState<boolean>(false);
-  const [, setCreatingQuestionId] = useState<number | null>(null);
-  const [creatingQuestionText, setCreatingQuestionText] = useState<string>('');
-  const [creatingisRevercedScore, setCreatingisRevercedScore] = useState<boolean>(false);
-  const [questionSaved, setQuestionSaved] = useState(false);
+  const [isDataFetched] = useState<boolean>(false)
+  const [isLoading] = useState<boolean>(false)
 
   const handleChangePreviewChecked = () => {
     setPreviewChecked(!previewChecked)
@@ -73,266 +65,21 @@ const CurrentTestEdit: NextPage = () => {
     setStatusChecked(!statusChecked)
   }
 
-  const { id } = router.query
-  const url = process.env.NEXT_PUBLIC_API_BASE_URL + '/current/tests/' + id
-  const { data, error } = useSWR(user.isSignedIn && id ? url : null, fetcher)
-
-  const questionsUrl = process.env.NEXT_PUBLIC_API_BASE_URL + `/tests/${id}/questions`
-  const { data: questionsData, error: questionsError, mutate } = useSWR(
-    user.isSignedIn && id ? questionsUrl : null,
-    fetcher,
-  )
-
-  useEffect(() => {
-    if (questionSaved) {
-      mutate();
-      setQuestionSaved(false);
-    }
-  }, [questionSaved, mutate]);
-
-  useEffect(() => {
-    if (questionsData) {
-      setQuestions(questionsData)
-    }
-  }, [questionsData])
-
-  const test = useMemo(() => {
-    const camelcasedData = camelcaseKeys(data, { deep: true })
-    console.log(camelcasedData)
-
-    if (!data) {
-      return {
-        id: 0,
-        title: '',
-        description: '',
-        siteUrl: '',
-        improvementSuggestion: '',
-        minScore: 0,
-        maxScore: 0,
-        avgScore: 0,
-        createdAt: '',
-        fromToday: '',
-        status: false,
-      }
-    }
-    return {
-      id: camelcasedData.id,
-      title: camelcasedData.title == null ? '' : camelcasedData.title,
-      description: camelcasedData.description == null ? '' : camelcasedData.description,
-      siteUrl: camelcasedData.siteUrl == null ? '' : camelcasedData.siteUrl,
-      improvementSuggestion: camelcasedData.improvementSuggestion == null ? '' : camelcasedData.improvementSuggestion,
-      minScore: camelcasedData.minScore,
-      maxScore: camelcasedData.maxScore,
-      avgScore: camelcasedData.avgScore,
-      createdAt: camelcasedData.createdAt,
-      fromToday: camelcasedData.fromToday,
-      status: camelcasedData.status,
-    }
-  }, [data])
-
   const { handleSubmit, control, reset, watch } = useForm<TestFormData>({
-    defaultValues: test,
+    defaultValues: test || {},
   })
 
-  useEffect(() => {
-    if (data) {
-      reset(test)
-      setStatusChecked(test.status == '公開中')
-      setIsFetched(true)
-    }
-  }, [data, reset, test])
-
-  const onSubmit: SubmitHandler<TestFormData> = (data) => {
-    if (data.title == '') {
-      return setSnackbar({
-        message: 'テストの保存にはタイトルが必要です',
-        severity: 'error',
-        pathname: '/admin/tests/edit/[id]',
-      })
-    }
-
-    if (statusChecked && data.description == '') {
-      return setSnackbar({
-        message: '説明なしのテストは公開はできません',
-        severity: 'error',
-        pathname: '/admin/tests/edit/[id]',
-      })
-    }
-
-    setIsLoading(true)
-
-    const patchUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL + '/current/tests/' + id
-
-    const headers = {
-      'Content-Type': 'application/json',
-      'access-token': localStorage.getItem('access-token'),
-      client: localStorage.getItem('client'),
-      uid: localStorage.getItem('uid'),
-    }
-
-    const status = statusChecked ? 'published' : 'draft'
-    const patchData = {
-      test: {
-        title: data.title,
-        description: data.description,
-        site_url: data.siteUrl,
-        improvement_suggestion: data.improvementSuggestion,
-        min_score: data.minScore,
-        max_score: data.maxScore,
-        avg_score: data.avgScore,
-        status: status,
-      },
-    }
-
-    axios({
-      method: 'PATCH',
-      url: patchUrl,
-      data: patchData,
-      headers: headers,
-    })
-      .then(() => {
-        setSnackbar({
-          message: 'テストを保存しました',
-          severity: 'success',
-          pathname: '/admin/tests/edit/[id]',
-        })
-      })
-      .catch((err: AxiosError<{ error: string }>) => {
-        console.log(err.message)
-        setSnackbar({
-          message: 'テストの保存に失敗しました',
-          severity: 'error',
-          pathname: '/admin/tests/edit/[id]',
-        })
-      })
-    setIsLoading(false)
+  const onSubmit: SubmitHandler<TestFormData> = data => {
+    console.log(data);
   }
 
-  const handleQuestion = (
-    questionId: number,
-    questionText: string,
-    isRevercedScore: boolean
-  ) => {
-    setEditingQuestionId(questionId);
-    setEditingQuestionText(questionText);
-    setEditingisRevercedScore(isRevercedScore);
-  };
-
-  const handleSaveQuestion = async (questionId: number) => {
-    const headers = {
-      'access-token': localStorage.getItem('access-token'),
-      client: localStorage.getItem('client'),
-      uid: localStorage.getItem('uid'),
-    };
-
-    try {
-      await axios.patch(`${url}/questions/${questionId}`, {
-        question: {
-          question_text: editingQuestionText,
-          isReversedScore: editingisRevercedScore,
-        },
-      }, { headers });
-      setSnackbar({
-        message: '質問を保存しました',
-        severity: 'success',
-        pathname: router.pathname,
-      });
-
-      setEditingQuestionId(null);
-      setEditingQuestionText('');
-      setEditingisRevercedScore(false);
-      setQuestionSaved(true);
-    } catch (err) {
-      const errorMessage =
-        err instanceof AxiosError && err.response
-          ? err.response.data.message || '不明なエラーが発生しました'
-          : 'ネットワークエラーが発生しました';
-
-      setSnackbar({
-        message: `フレーズの保存に失敗しました: ${errorMessage}`,
-        severity: 'error',
-        pathname: router.pathname,
-      });
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingQuestionId(null);
-    setEditingQuestionText('');
-    setEditingisRevercedScore(false);
-  };
-
-  const handleCreateQuestion = async () => {
-    const headers = {
-      'access-token': localStorage.getItem('access-token'),
-      client: localStorage.getItem('client'),
-      uid: localStorage.getItem('uid'),
-    };
-    
-    try {
-      await axios.post(`${url}/questions`, {
-        question: {
-          question_text: creatingQuestionText,
-          isReversedScore: creatingisRevercedScore,
-        },
-      }, { headers });
-      setSnackbar({
-        message: '質問を新規作成しました',
-        severity: 'success',
-        pathname: router.pathname,
-      });
-
-      setCreatingQuestionId(null);
-      setCreatingQuestionText('');
-      setCreatingisRevercedScore(false);
-      setQuestionSaved(true);
-    } catch (err) {
-      const errorMessage =
-        err instanceof AxiosError && err.response
-          ? err.response.data.message || '不明なエラーが発生しました'
-          : 'ネットワークエラーが発生しました';
-
-      setSnackbar({
-        message: `フレーズの作成に失敗しました: ${errorMessage}`,
-        severity: 'error',
-        pathname: router.pathname,
-      });
-    }
-  };
-
-  const handleDeleteQuestion = async (questionId: number) => {
-    const headers = {
-      'access-token': localStorage.getItem('access-token'),
-      client: localStorage.getItem('client'),
-      uid: localStorage.getItem('uid'),
-    };
-
-    try {
-      await axios.delete(`${url}/questions/${questionId}`, { headers });
-      setSnackbar({
-        message: '質問を削除しました',
-        severity: 'success',
-        pathname: router.pathname,
-      });
-
-      setQuestionSaved(true);
-    } catch (err) {
-      const errorMessage =
-        err instanceof AxiosError && err.response
-          ? err.response.data.message || '不明なエラーが発生しました'
-          : 'ネットワークエラーが発生しました';
-
-      setSnackbar({
-        message: `フレーズの削除に失敗しました: ${errorMessage}`,
-        severity: 'error',
-        pathname: router.pathname,
-      });
-    }
-  }
-
+  const { id } = router.query
+  const { test, error, isFetched } = useTestData(id, user);
+  const { questions, mutate } = useTestQuestions(id, user);
+  const questionManager = useQuestionManager(id as string, mutate);
+   
   if (error) return <Error />
-  if (!data || !isFetched) return <Loading />
+  if (!test || !isFetched) return <Loading />
 
   return (
     <Box
@@ -340,191 +87,19 @@ const CurrentTestEdit: NextPage = () => {
       onSubmit={handleSubmit(onSubmit)}
       sx={{ backgroundColor: '#EDF2F7', minHeight: '100vh' }}
     >
-      <AppBar
-        position="fixed"
-        sx={{
-          backgroundColor: '#EDF2F7',
-        }}
-      >
-        <Toolbar
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <Box sx={{ width: 50 }}>
-            <Link href="/admin/home">
-              <IconButton>
-                <ArrowBackSharpIcon />
-              </IconButton>
-            </Link>
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: { xs: '0 16px', sm: '0 24px' },
-            }}
-          >
-            <Box sx={{ textAlign: 'center' }}>
-              <Switch
-                checked={previewChecked}
-                onChange={handleChangePreviewChecked}
-              />
-              <Typography sx={{ color: "black", fontSize: { xs: 12, sm: 15 } }}>
-                プレビュー表示
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: 'center' }}>
-              <Switch
-                checked={statusChecked}
-                onChange={handleChangeStatusChecked}
-              />
-              <Typography sx={{ color: "black", fontSize: { xs: 12, sm: 15 } }}>
-                下書き／公開
-              </Typography>
-            </Box>
-            <LoadingButton
-              variant="contained"
-              type="submit"
-              loading={isLoading}
-              sx={{
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: { xs: 12, sm: 16 },
-              }}
-            >
-              更新する
-            </LoadingButton>
-          </Box>
-        </Toolbar>
-      </AppBar>
+      <TestEditHeader
+        previewChecked={previewChecked}
+        onPreviewCheckedChange={handleChangePreviewChecked}
+        statusChecked={statusChecked}
+        onStatusCheckedChange={handleChangeStatusChecked}
+        isLoading={isLoading}
+      />
       <Container
         maxWidth="lg"
         sx={{ pt: 11, pb: 3, display: 'flex', justifyContent: 'center' }}
       >
         {!previewChecked && (
-            <><Box sx={{ width: 840 }}>
-            <Box sx={{ mb: 2 }}>
-              <Typography>タイトル</Typography>
-              <Controller
-              name="title"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TextField
-                {...field}
-                type="text"
-                error={fieldState.invalid}
-                helperText={fieldState.error?.message}
-                placeholder="Write in Title"
-                fullWidth
-                sx={{ backgroundColor: 'white' }} />
-              )} />
-            </Box>
-            <Box sx={{ mb: 2 }}>
-              <Typography>説明</Typography>
-              <Controller
-              name="description"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TextField
-                {...field}
-                type="text"
-                error={fieldState.invalid}
-                helperText={fieldState.error?.message}
-                multiline
-                fullWidth
-                placeholder="Write in Markdown Text"
-                rows={10}
-                sx={{ backgroundColor: 'white' }} />
-              )} />
-            </Box>
-            <Box sx={{ mb: 2 }}>
-              <Typography>改善案</Typography>
-              <Controller
-              name="improvementSuggestion"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TextField
-                {...field}
-                type="textarea"
-                error={fieldState.invalid}
-                helperText={fieldState.error?.message}
-                multiline
-                fullWidth
-                placeholder="Improvement Suggestion in Markdown Text"
-                rows={10}
-                sx={{ backgroundColor: 'white' }} />
-              )} />
-            </Box>
-            <Box sx={{ mb: 2 }}>
-              <Typography>引用URL</Typography>
-              <Controller
-              name="siteUrl"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TextField
-                {...field}
-                type="url"
-                error={fieldState.invalid}
-                helperText={fieldState.error?.message}
-                placeholder="Site URL"
-                fullWidth
-                sx={{ backgroundColor: 'white' }} />
-              )} />
-            </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Box sx={{ flex: 1 }}>
-              <Typography>最低スコア</Typography>
-              <Controller
-                name="minScore"
-                control={control}
-                render={({ field, fieldState }) => (
-                <TextField
-                  {...field}
-                  type="number"
-                  error={fieldState.invalid}
-                  helperText={fieldState.error?.message}
-                  placeholder="Minimum Score"
-                  fullWidth
-                  sx={{ backgroundColor: 'white' }} />
-                )} />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-              <Typography>最高スコア</Typography>
-              <Controller
-                name="maxScore"
-                control={control}
-                render={({ field, fieldState }) => (
-                <TextField
-                  {...field}
-                  type="number"
-                  error={fieldState.invalid}
-                  helperText={fieldState.error?.message}
-                  placeholder="Maximum Score"
-                  fullWidth
-                  sx={{ backgroundColor: 'white' }} />
-                )} />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-              <Typography>平均スコア</Typography>
-              <Controller
-                name="avgScore"
-                control={control}
-                render={({ field, fieldState }) => (
-                <TextField
-                  {...field}
-                  type="number"
-                  error={fieldState.invalid}
-                  helperText={fieldState.error?.message}
-                  placeholder="Average Score"
-                  fullWidth
-                  sx={{ backgroundColor: 'white' }} />
-                )} />
-              </Box>
-            </Box>
+            <><TestForm test={test} control={control} />
               <Box sx={{ mt: 4 }}>
               <Typography variant="h5">質問一覧</Typography>
               {questions.map((question, index) => (
@@ -609,10 +184,9 @@ const CurrentTestEdit: NextPage = () => {
                   </CardContent>
                 </Card>
               </Box>
-             
-            </Box></>
-            )}
-            {previewChecked && (
+            </>
+          )}
+        {previewChecked && (
           <Box sx={{ width: 840 }}>
             <Typography
               component="h2"
