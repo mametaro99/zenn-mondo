@@ -23,7 +23,7 @@ Rails.application.routes.draw do
       end
 
       namespace :current do
-        resources :tests, only: [:index, :show, :create, :update, :destroy] do
+        resources :tests, only: [:index, :show, :create, :update, :destroy, :bulk_question_create] do
           collection do
             get :admin_index
           end
