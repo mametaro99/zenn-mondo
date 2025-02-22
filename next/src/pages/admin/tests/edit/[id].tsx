@@ -55,8 +55,9 @@ const CurrentTestEdit: NextPage = () => {
   const [user] = useAdminState()
   const [previewChecked, setPreviewChecked] = useState<boolean>(false)
   const [statusChecked, setStatusChecked] = useState<boolean>(false)
-  const [isDataFetched] = useState<boolean>(false)
+  const [isFetched, setIsFetched] = useState<boolean>(false)
   const [isLoading] = useState<boolean>(false)
+  const [, setSnackbar] = useSnackbarState()
 
   const handleChangePreviewChecked = () => {
     setPreviewChecked(!previewChecked)
@@ -68,7 +69,21 @@ const CurrentTestEdit: NextPage = () => {
 
 
   const onSubmit: SubmitHandler<TestFormData> = data => {
-    console.log(data);
+    if (data.title == '') {
+      return setSnackbar({
+        message: 'テストの保存にはタイトルが必要です',
+        severity: 'error',
+        pathname: '/current/articles/edit/[id]',
+      })
+    }
+
+    if (statusChecked && data.description == '') {
+      return setSnackbar({
+        message: '本文なしのテストは公開はできません',
+        severity: 'error',
+        pathname: '/current/articles/edit/[id]',
+      })
+    }
   }
 
   const { id } = router.query
@@ -77,6 +92,15 @@ const CurrentTestEdit: NextPage = () => {
   const { handleSubmit, control, reset, watch } = useForm<TestFormData>({
     defaultValues: test || {},
   })
+
+  useEffect(() => {
+    if (test) {
+      reset(test)
+      setStatusChecked(test.status == '公開中')
+      setIsFetched(true)
+    }
+  }, [data, test, reset])
+
 
   const { questions, mutate } = useTestQuestions(id, user);
   const questionManager = useQuestionManager(id as string, mutate);
