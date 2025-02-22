@@ -25,6 +25,7 @@ import { useTestData } from '@/hooks/useTestData'
 import { useTestQuestions } from '@/hooks/useTestQuestions'
 import { useQuestionManager } from '@/hooks/useQuestionManager'
 import TestForm from '@/components/TestEditForm'
+import QuestionFormList from "@/components/QuestionFormList";
 
 type TestFormData = {
   id?: string
@@ -65,9 +66,6 @@ const CurrentTestEdit: NextPage = () => {
     setStatusChecked(!statusChecked)
   }
 
-  const { handleSubmit, control, reset, watch } = useForm<TestFormData>({
-    defaultValues: test || {},
-  })
 
   const onSubmit: SubmitHandler<TestFormData> = data => {
     console.log(data);
@@ -75,8 +73,27 @@ const CurrentTestEdit: NextPage = () => {
 
   const { id } = router.query
   const { test, error, isFetched } = useTestData(id, user);
+
+  const { handleSubmit, control, reset, watch } = useForm<TestFormData>({
+    defaultValues: test || {},
+  })
+
   const { questions, mutate } = useTestQuestions(id, user);
   const questionManager = useQuestionManager(id as string, mutate);
+
+  const handleSaveQuestion = (id: number, text: string, isReversed: boolean) => {
+    questionManager.editingQuestionId = id;
+    questionManager.setEditingQuestionText(text);
+    questionManager.setEditingisRevercedScore(isReversed);
+  };
+
+  const handleDeleteQuestion = async (id: number) => {
+    await questionManager.handleDeleteQuestion(id);
+  };
+
+  const handleCreateQuestion = () => {
+    questionManager.handleCreateQuestion();
+  };
    
   if (error) return <Error />
   if (!test || !isFetched) return <Loading />
@@ -99,90 +116,15 @@ const CurrentTestEdit: NextPage = () => {
         sx={{ pt: 11, pb: 3, display: 'flex', justifyContent: 'center' }}
       >
         {!previewChecked && (
-            <><TestForm test={test} control={control} />
-              <Box sx={{ mt: 4 }}>
-              <Typography variant="h5">質問一覧</Typography>
-              {questions.map((question, index) => (
-                <Card key={question.id} sx={{ mb: 2 }}>
-                  <CardContent>
-                    {editingQuestionId === question.id ? (
-                      <Box>
-                        <TextField
-                          fullWidth
-                          label="質問名"
-                          value={editingQuestionText}
-                          onChange={(e) => setEditingQuestionText(e.target.value)}
-                          autoFocus
-                          sx={{ mb: 2 }}
-                        />
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-center' }}>
-                          <Typography>スコア反転</Typography>
-                          <Switch
-                            checked={editingisRevercedScore}
-                            onChange={() => setEditingisRevercedScore(!editingisRevercedScore)}
-                          />
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                          <Button onClick={() => handleSaveQuestion(question.id)} color="primary" variant="contained">
-                            保存
-                          </Button>
-                          <Button onClick={handleCancelEdit} color="secondary" variant="outlined">
-                            キャンセル
-                          </Button>
-                        </Box>
-                      </Box>
-                    ) : (
-                    <Box>
-                      <Typography variant="h6">{index + 1}. {question.question_text}</Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Typography>スコア反転: {question.isReversedScore ? 'あり' : 'なし'}</Typography>
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Button
-                              onClick={() => handleQuestion(question.id, question.question_text, question.isReversedScore)}
-                              color="primary"
-                              variant="contained"
-                            >
-                              編集
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteQuestion(question.id)}
-                              color="error"
-                              variant="contained"
-                            >
-                              削除
-                            </Button>
-                          </Box>
-                        </Box>
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-              {/* 新しいフレーズを追加 */}
-                <Card sx={{ mb: 2 }}>
-                  <CardContent>
-                    <Typography variant="h6">新しい質問を追加</Typography>
-                    <TextField
-                      fullWidth
-                      label="質問名"
-                      value={creatingQuestionText}
-                      onChange={(e) => setCreatingQuestionText(e.target.value)}
-                      sx={{ mb: 2 }}
-                    />       
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                      <Typography>スコア反転</Typography>
-                      <Switch
-                        checked={creatingisRevercedScore}
-                        onChange={() => setCreatingisRevercedScore(!creatingisRevercedScore)}
-                      />
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button onClick={() => handleCreateQuestion()} color="primary" variant="contained">
-                      保存
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
+            <><Box sx={{ width: 840 }}>
+                <TestForm test={test} control={control} />
+                <QuestionFormList
+                  questions={questions}
+                  questionManager={questionManager}
+                  onEdit={handleSaveQuestion}
+                  onDelete={handleDeleteQuestion}
+                  onCreate={handleCreateQuestion}
+                />
               </Box>
             </>
           )}
