@@ -1,7 +1,7 @@
 class Api::V1::Current::TestsController < Api::V1::BaseController
   include Pagination
   before_action :authenticate_user!, only: [:index]
-  before_action :authenticate_admin!, only: [:admin_index, :show, :create, :update, :destroy] 
+  before_action :authenticate_admin!, only: [:admin_index, :show, :create, :update, :destroy,:bulk_question_create] 
 
 
   # ログインしたユーザが受けたテストの一覧を返す
@@ -24,6 +24,19 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
   def create
     unsaved_test = current_admin.tests.unsaved.first || current_admin.tests.create!(status: :unsaved)
     render json: unsaved_test
+  end
+
+  def bulk_question_create
+    questions = params.require(:questions).map do |question_params|
+      Question.create!(
+        question_text: question_params[:question_text],
+        reverse_scoring: question_params[:reverse_scoring]
+      )
+    end
+
+    render json: questions, status: :created
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { errors: e.record.errors }, status: :unprocessable_entity
   end
 
   def update
@@ -58,5 +71,11 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
 
   def test_params
     params.require(:test).permit(:title, :description, :site_url, :improvement_suggestion, :min_score, :max_score, :avg_score, :status)
+  end
+
+  def questions_params
+    params.require(:questions).map do |question|
+      question.permit(:question_text, :reverse_scoring)
+    end
   end
 end
