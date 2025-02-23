@@ -28,7 +28,6 @@ import TestForm from '@/components/TestEditForm'
 import QuestionFormList from "@/components/QuestionFormList";
 
 type TestFormData = {
-  id?: string
   title: string
   description: string
   siteUrl: string
@@ -37,8 +36,6 @@ type TestFormData = {
   maxScore: number
   avgScore: number
   status: string
-  createdAt: string
-  fromToday: string
 }
 
 
@@ -56,7 +53,7 @@ const CurrentTestEdit: NextPage = () => {
   const [previewChecked, setPreviewChecked] = useState<boolean>(false)
   const [statusChecked, setStatusChecked] = useState<boolean>(false)
   const [isFetched, setIsFetched] = useState<boolean>(false)
-  const [isLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [, setSnackbar] = useSnackbarState()
 
   const handleChangePreviewChecked = () => {
@@ -67,28 +64,8 @@ const CurrentTestEdit: NextPage = () => {
     setStatusChecked(!statusChecked)
   }
 
-
-  const onSubmit: SubmitHandler<TestFormData> = data => {
-    if (data.title == '') {
-      return setSnackbar({
-        message: 'テストの保存にはタイトルが必要です',
-        severity: 'error',
-        pathname: '/current/articles/edit/[id]',
-      })
-    }
-
-    if (statusChecked && data.description == '') {
-      return setSnackbar({
-        message: '本文なしのテストは公開はできません',
-        severity: 'error',
-        pathname: '/current/articles/edit/[id]',
-      })
-    }
-  }
-
   const { id } = router.query
   const { test, error, isFetched: isTestFetched} = useTestData(id, user);
-
 
   const { handleSubmit, control, reset, watch } = useForm<TestFormData>({
     defaultValues: test || {},
@@ -103,6 +80,76 @@ const CurrentTestEdit: NextPage = () => {
   }, [test, reset])
 
 
+
+  const onSubmit: SubmitHandler<TestFormData> = (data) => {
+    if (data.title == '') {
+      return setSnackbar({
+        message: 'テストの保存にはタイトルが必要です',
+        severity: 'error',
+        pathname: '/admin/tests/edit/[id]',
+      })
+    }
+
+    if (statusChecked && data.description == '') {
+      return setSnackbar({
+        message: '説明なしのテストは公開はできません',
+        severity: 'error',
+        pathname: '/admin/tests/edit/[id]',
+      })
+    }
+
+    setIsLoading(true)
+
+    const patchUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL + '/current/tests/' + id
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'access-token': localStorage.getItem('access-token'),
+      client: localStorage.getItem('client'),
+      uid: localStorage.getItem('uid'),
+    }
+
+    const status = statusChecked ? 'published' : 'draft'
+    const patchData = {
+      test: {
+        title: data.title,
+        description: data.description,
+        site_url: data.siteUrl,
+        improvement_suggestion: data.improvementSuggestion,
+        min_score: data.minScore,
+        max_score: data.maxScore,
+        avg_score: data.avgScore,
+        status: status,
+      },
+    }
+
+    axios({
+      method: 'PATCH',
+      url: patchUrl,
+      data: patchData,
+      headers: headers,
+    })
+      .then(() => {
+        setSnackbar({
+          message: 'テストを保存しました',
+          severity: 'success',
+          pathname: '/admin/tests/edit/[id]',
+        })
+      })
+      .catch((err: AxiosError<{ error: string }>) => {
+        console.log(err.message)
+        setSnackbar({
+          message: 'テストの保存に失敗しました',
+          severity: 'error',
+          pathname: '/admin/tests/edit/[id]',
+        })
+      })
+    setIsLoading(false)
+  }
+
+
+
   const { questions, mutate } = useTestQuestions(id, user);
   const questionManager = useQuestionManager(id as string, mutate);
 
@@ -111,9 +158,6 @@ const CurrentTestEdit: NextPage = () => {
     await questionManager.handleDeleteQuestion(id);
   };
 
-  const handleCreateQuestion = () => {
-    questionManager.handleCreateQuestion();
-  };
    
   if (error) return <Error />
   if (!test || !isTestFetched) return <Loading />
@@ -124,29 +168,28 @@ const CurrentTestEdit: NextPage = () => {
       onSubmit={handleSubmit(onSubmit)}
       sx={{ backgroundColor: '#EDF2F7', minHeight: '100vh' }}
     >
-      <TestEditHeader
-        previewChecked={previewChecked}
-        onPreviewCheckedChange={handleChangePreviewChecked}
-        statusChecked={statusChecked}
-        onStatusCheckedChange={handleChangeStatusChecked}
-        isLoading={isLoading}
-      />
       <Container
         maxWidth="lg"
-        sx={{ pt: 11, pb: 3, display: 'flex', justifyContent: 'center' }}
+        sx={{ pt: 11, pb: 3, display: 'flex', justifyContent: 'center', flexFlow: 'column'}}
       >
+        <TestForm 
+          test={test} 
+          control={control}
+          previewChecked={previewChecked}
+          onPreviewCheckedChange={handleChangePreviewChecked}
+          statusChecked={statusChecked}
+          onStatusCheckedChange={handleChangeStatusChecked}
+          isLoading={isLoading}
+        />
         {!previewChecked && (
-            <><Box sx={{ width: 840 }}>
-                <TestForm test={test} control={control} />
-                <QuestionFormList
-                  questions={questions}
-                  questionManager={questionManager}
-                  onDelete={handleDeleteQuestion}
-                  onCreate={handleCreateQuestion}
-                />
-              </Box>
-            </>
-          )}
+          <Box sx={{ width: 840 }}>
+            <QuestionFormList
+              questions={questions}
+              questionManager={questionManager}
+              onDelete={handleDeleteQuestion}
+            />
+          </Box>
+        )}
         {previewChecked && (
           <Box sx={{ width: 840 }}>
             <Typography
