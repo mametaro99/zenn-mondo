@@ -1,12 +1,14 @@
-import React from "react";
-import { Box, Card, CardContent, Button, TextField, Typography, Switch } from "@mui/material";
+import React, { useState } from "react";
+import { Box, Button, TextField, Typography, FormControl, FormLabel, FormHelperText, Input, Card, CardContent, Switch, CircularProgress, Alert } from "@mui/material";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 type QuestionProps = {
-  id: number
-  question_text: string
-  isReversedScore: boolean
-}
-
+  id: number;
+  question_text: string;
+  isReversedScore: boolean;
+};
 
 interface QuestionFormListProps {
   questions: QuestionProps[];
@@ -14,11 +16,62 @@ interface QuestionFormListProps {
   onDelete: (id: number) => void;
 }
 
-const QuestionFormList: React.FC<QuestionFormListProps> = ({
-  questions,
-  questionManager,
-  onDelete,
-}) => {
+const questionSchema = z.object({
+  question: z.string().min(1, { message: "質問を入力してください" }),
+});
+
+const fileSchema = z.object({
+  apiKey: z.string().length(51, { message: "OPENAI API KEYを入力してください" }),
+  pdfFile: z.custom<FileList>().refine((file) => file && file.length !== 0, {
+    message: "ファイルが選択されていません",
+  }),
+});
+
+const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, questionManager, onDelete }) => {
+  // react-hook-form setup
+
+  const {
+    register,
+    handleSubmit: handleSubmitFile,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(fileSchema) });
+
+  const [loading, setLoading] = useState(false);
+  const [responseMessage, setResponseMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState('');
+
+  async function onFileSubmit(values: z.infer<typeof fileSchema>) {
+    setLoading(true);
+    setResponseMessage(null);
+    setErrorMessage(null);
+
+    const formData = new FormData();
+    formData.append("pdfFile", values.pdfFile[0]);
+
+    try {
+      const response = await fetch("/api/readPdf", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("PDF の読み込みに失敗しました");
+      }
+
+      const result = await response.json();
+      setResponseMessage(`成功: ${result.data}`);
+    } catch (error: any) {
+      setErrorMessage(error.message || "エラーが発生しました");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function onQuestionSubmit(values: z.infer<typeof questionSchema>) {
+    console.log("質問送信:", values);
+  }
+
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h5">質問一覧</Typography>
@@ -35,7 +88,7 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({
                   autoFocus
                   sx={{ mb: 2 }}
                 />
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <Typography>スコア反転</Typography>
                   <Switch
                     checked={questionManager.editingisRevercedScore}
@@ -57,18 +110,10 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Typography>スコア反転: {question.isReversedScore ? 'あり' : 'なし'}</Typography>
                   <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button
-                    onClick={() => questionManager.handleQuestion(question.id, question.question_text, question.isReversedScore)}
-                    color="primary"
-                    variant="contained"
-                  >
+                    <Button onClick={() => questionManager.handleQuestion(question.id, question.question_text, question.isReversedScore)} color="primary" variant="contained">
                       編集
                     </Button>
-                    <Button
-                      onClick={() => onDelete(question.id)}
-                      color="error"
-                      variant="contained"
-                    >
+                    <Button onClick={() => onDelete(question.id)} color="error" variant="contained">
                       削除
                     </Button>
                   </Box>
@@ -78,7 +123,7 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({
           </CardContent>
         </Card>
       ))}
-      {/* New question creation */}
+
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Typography variant="h6">新しい質問を追加</Typography>
@@ -103,7 +148,38 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({
           </Box>
         </CardContent>
       </Card>
-    </Box>
+
+      {/* ファイル送信フォーム */}
+      <Box component="form" onSubmit={handleSubmitFile(onFileSubmit)} sx={{ mb: 4 }}>
+        <Typography variant="h6">PDF 読み込みフォーム</Typography>
+        <TextField
+          label="OPENAI API KEY"
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)} // Separate state for API Key
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+
+          {/* PDFファイル入力 */}
+          <FormControl error={!!errors.pdfFile}>
+            <FormLabel>PDFファイル</FormLabel>
+            <TextField type="file" inputProps={{ accept: ".pdf" }} {...register("pdfFile")} />
+            {errors.pdfFile && <FormHelperText>{errors.pdfFile.message}</FormHelperText>}
+          </FormControl>
+
+          {/* 送信ボタン */}
+          <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }} disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : "送信"}
+          </Button>
+
+          {/* 成功メッセージ */}
+          {responseMessage && <Alert severity="success" sx={{ mt: 2 }}>{responseMessage}</Alert>}
+
+          {/* エラーメッセージ */}
+          {errorMessage && <Alert severity="error" sx={{ mt: 2 }}>{errorMessage}</Alert>}
+        </Box>
+      </Box>
   );
 };
 
