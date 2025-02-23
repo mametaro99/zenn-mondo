@@ -87,7 +87,8 @@ const CurrentTestEdit: NextPage = () => {
   }
 
   const { id } = router.query
-  const { test, error, isFetched } = useTestData(id, user);
+  const { test, error, isFetched: isTestFetched} = useTestData(id, user);
+
 
   const { handleSubmit, control, reset, watch } = useForm<TestFormData>({
     defaultValues: test || {},
@@ -99,17 +100,12 @@ const CurrentTestEdit: NextPage = () => {
       setStatusChecked(test.status == '公開中')
       setIsFetched(true)
     }
-  }, [data, test, reset])
+  }, [test, reset])
 
 
   const { questions, mutate } = useTestQuestions(id, user);
   const questionManager = useQuestionManager(id as string, mutate);
 
-  const handleSaveQuestion = (id: number, text: string, isReversed: boolean) => {
-    questionManager.editingQuestionId = id;
-    questionManager.setEditingQuestionText(text);
-    questionManager.setEditingisRevercedScore(isReversed);
-  };
 
   const handleDeleteQuestion = async (id: number) => {
     await questionManager.handleDeleteQuestion(id);
@@ -120,7 +116,7 @@ const CurrentTestEdit: NextPage = () => {
   };
    
   if (error) return <Error />
-  if (!test || !isFetched) return <Loading />
+  if (!test || !isTestFetched) return <Loading />
 
   return (
     <Box
@@ -145,7 +141,6 @@ const CurrentTestEdit: NextPage = () => {
                 <QuestionFormList
                   questions={questions}
                   questionManager={questionManager}
-                  onEdit={handleSaveQuestion}
                   onDelete={handleDeleteQuestion}
                   onCreate={handleCreateQuestion}
                 />
