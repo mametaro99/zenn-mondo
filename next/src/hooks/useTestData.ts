@@ -3,7 +3,7 @@ import { fetcher } from '@/utils'
 import { useState, useEffect } from "react";
 import camelcaseKeys from "camelcase-keys";
 
-type TestFormData = {
+type TestData = {
   id?: string
   title: string
   description: string
@@ -21,7 +21,7 @@ export const useTestData = (id: string | string[] | undefined, user: any) => {
   const url = id ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/current/tests/${id}` : null;
   const { data, error } = useSWR(user.isSignedIn && id ? url : null, fetcher);
 
-  const [test, setTest] = useState<TestFormData | null>(null);
+  const [test, setTest] = useState<TestData | null>(null);
   const [isFetched, setIsFetched] = useState(false);
 
   useEffect(() => {
