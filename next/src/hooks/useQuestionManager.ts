@@ -26,6 +26,16 @@ export const useQuestionManager = (id: string, mutate: () => void) => {
     }
   }, []);
 
+  const handleQuestion = (
+    questionId: number,
+    questionText: string,
+    isRevercedScore: boolean
+  ) => {
+    setEditingQuestionId(questionId);
+    setEditingQuestionText(questionText);
+    setEditingisRevercedScore(isRevercedScore);
+  };
+
   const handleSaveQuestion = async (questionId: number) => {
     try {
       await axios.patch(`${url}/questions/${questionId}`, {
@@ -85,6 +95,7 @@ export const useQuestionManager = (id: string, mutate: () => void) => {
     setEditingisRevercedScore,
     setCreatingQuestionText,
     setCreatingisRevercedScore,
+    handleQuestion,
     handleSaveQuestion,
     handleCreateQuestion,
     handleDeleteQuestion,
