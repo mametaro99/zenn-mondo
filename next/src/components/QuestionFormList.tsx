@@ -12,14 +12,12 @@ interface QuestionFormListProps {
   questions: QuestionProps[];
   questionManager: any;
   onDelete: (id: number) => void;
-  onCreate: () => void;
 }
 
 const QuestionFormList: React.FC<QuestionFormListProps> = ({
   questions,
   questionManager,
   onDelete,
-  onCreate,
 }) => {
   return (
     <Box sx={{ mt: 4 }}>
