@@ -318,3 +318,10 @@ erDiagram
 上記は、ネットワークの構成については、以下の記事を参考に設計しました。
 
 [【独学ポートフォリオ開発応援】実務未経験から学べる！Rails×Next.js×AWSハンズオン解説](https://zenn.dev/ddpmntcpbr/books/rna-hands-on)
+
+
+## 論文PDFを生成系AIに渡して、質問を自動生成
+
+以下を参照
+
+- [【Nextjs】【TypeScript】PDFの内容を質問するアプリを作る_arafipro](https://zenn.dev/arafipro/books/pdf-question-yt)
