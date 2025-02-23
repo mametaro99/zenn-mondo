@@ -1,10 +1,16 @@
 import React from "react";
 import { Box, Card, CardContent, Button, TextField, Typography, Switch } from "@mui/material";
 
+type QuestionProps = {
+  id: number
+  question_text: string
+  isReversedScore: boolean
+}
+
+
 interface QuestionFormListProps {
-  questions: any[];
+  questions: QuestionProps[];
   questionManager: any;
-  onEdit: (id: number, text: string, isReversed: boolean) => void;
   onDelete: (id: number) => void;
   onCreate: () => void;
 }
@@ -12,7 +18,6 @@ interface QuestionFormListProps {
 const QuestionFormList: React.FC<QuestionFormListProps> = ({
   questions,
   questionManager,
-  onEdit,
   onDelete,
   onCreate,
 }) => {
@@ -54,11 +59,11 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Typography>スコア反転: {question.isReversedScore ? 'あり' : 'なし'}</Typography>
                   <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button
-                      onClick={() => onEdit(question.id, question.question_text, question.isReversedScore)}
-                      color="primary"
-                      variant="contained"
-                    >
+                  <Button
+                    onClick={() => questionManager.handleQuestion(question.id, question.question_text, question.isReversedScore)}
+                    color="primary"
+                    variant="contained"
+                  >
                       編集
                     </Button>
                     <Button
