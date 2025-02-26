@@ -3,6 +3,9 @@ import { Box, Button, TextField, Typography, FormControl, FormLabel, FormHelperT
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { readPdf } from "@/lib/readPdf";
+import { textSplitter } from "@/lib/textSplitter";
+import { openAiApi } from "@/lib/openai";
 
 type QuestionProps = {
   id: number;
@@ -16,16 +19,18 @@ interface QuestionFormListProps {
   onDelete: (id: number) => void;
 }
 
-const questionSchema = z.object({
-  question: z.string().min(1, { message: "質問を入力してください" }),
-});
+
 
 const fileSchema = z.object({
+  question: z
+    .string({ required_error: "質問を入力してください" })
+    .min(1, { message: "質問を入力してください" }),
   apiKey: z.string().length(51, { message: "OPENAI API KEYを入力してください" }),
   pdfFile: z.custom<FileList>().refine((file) => file && file.length !== 0, {
     message: "ファイルが選択されていません",
   }),
 });
+
 
 const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, questionManager, onDelete }) => {
   // react-hook-form setup
@@ -40,36 +45,20 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
+  const [question,setQuestion] = useState('');
+
+  const [text, setText] = useState<string>("");
 
   async function onFileSubmit(values: z.infer<typeof fileSchema>) {
     setLoading(true);
     setResponseMessage(null);
     setErrorMessage(null);
 
-    const formData = new FormData();
-    formData.append("pdfFile", values.pdfFile[0]);
-
-    try {
-      const response = await fetch("/api/readPdf", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("PDF の読み込みに失敗しました");
-      }
-
-      const result = await response.json();
-      setResponseMessage(`成功: ${result.data}`);
-    } catch (error: any) {
-      setErrorMessage(error.message || "エラーが発生しました");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function onQuestionSubmit(values: z.infer<typeof questionSchema>) {
-    console.log("質問送信:", values);
+    const str = await readPdf(`data/${values.pdfFile[0].name}`);
+    const split_str = await textSplitter(str);
+    const res = await openAiApi(values.apiKey, values.question, split_str);
+    console.log(res);
+    setText(res.text);
   }
 
   return (
@@ -168,6 +157,16 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
             {errors.pdfFile && <FormHelperText>{errors.pdfFile.message}</FormHelperText>}
           </FormControl>
 
+          {/* 質問内容を入力 */} 
+          <TextField
+            label="質問内容を入力"
+            type="text"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)} // Separate state for API Key
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+
           {/* 送信ボタン */}
           <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }} disabled={loading}>
             {loading ? <CircularProgress size={24} /> : "送信"}
@@ -179,7 +178,9 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
           {/* エラーメッセージ */}
           {errorMessage && <Alert severity="error" sx={{ mt: 2 }}>{errorMessage}</Alert>}
         </Box>
+        <p>{text}</p>
       </Box>
+      
   );
 };
 
