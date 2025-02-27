@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Box, Button, TextField, Typography, FormControl, FormLabel, FormHelperText, Input, Card, CardContent, Switch, CircularProgress, Alert } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { Form, useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { readPdf } from "@/lib/readPdf";
 import { textSplitter } from "@/lib/textSplitter";
 import { openAiApi } from "@/lib/openai";
 
@@ -25,7 +24,7 @@ const fileSchema = z.object({
   question: z
     .string({ required_error: "質問を入力してください" })
     .min(1, { message: "質問を入力してください" }),
-  apiKey: z.string().length(51, { message: "OPENAI API KEYを入力してください" }),
+  apiKey: z.string().nonempty({ message: "OPENAI API KEYを入力してください" }),
   pdfFile: z.custom<FileList>().refine((file) => file && file.length !== 0, {
     message: "ファイルが選択されていません",
   }),
@@ -49,17 +48,91 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
 
   const [text, setText] = useState<string>("");
 
-  async function onFileSubmit(values: z.infer<typeof fileSchema>) {
-    setLoading(true);
-    setResponseMessage(null);
-    setErrorMessage(null);
+  const form = useForm<z.infer<typeof fileSchema>>({
+    resolver: zodResolver(fileSchema),
+    defaultValues: {
+      question: "",
+      apiKey: "",
+      pdfFile: undefined,
+    },
+  });
 
-    const str = await readPdf(`data/${values.pdfFile[0].name}`);
-    const split_str = await textSplitter(str);
-    const res = await openAiApi(values.apiKey, values.question, split_str);
-    console.log(res);
-    setText(res.text);
+
+  async function onFileSubmit(values: z.infer<typeof fileSchema>) {
+    try {
+      setLoading(true);  // 処理中状態に設定
+      setResponseMessage(null);  // 前のレスポンスメッセージをクリア
+      setErrorMessage(null);  // 前のエラーメッセージをクリア
+  
+      if (!values.pdfFile || values.pdfFile.length === 0) {
+        throw new Error("PDFファイルが選択されていません");
+      }
+  
+      const file = values.pdfFile[0];
+      console.log("Selected file:", file);
+  
+      const fileReader = new FileReader();
+      fileReader.readAsArrayBuffer(file);
+  
+      fileReader.onload = async () => {
+        try {
+          const pdfBuffer = fileReader.result as ArrayBuffer;
+          console.log("PDF file read successfully");
+  
+          // サーバーのAPIを呼び出す
+          const res = await fetch('/api/readpdf', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ pdfBuffer: Array.from(new Uint8Array(pdfBuffer)) }), // PDFファイルを送信
+          });
+  
+          if (!res.ok) {
+            throw new Error(`Failed to process PDF: ${res.statusText}`);
+          }
+  
+          const data = await res.json();
+          console.log("PDF content:", data.text);
+  
+          // PDF内容を分割
+          const split_str = await textSplitter(data.text);
+          console.log("Split text:", split_str);
+  
+          // OpenAI APIを呼び出し
+          const openAiResponse = await openAiApi(values.apiKey, values.question, split_str);
+          console.log("OpenAI API response:", openAiResponse);
+  
+          // レスポンスを画面に表示
+          setText(openAiResponse.text);
+  
+        } catch (error) {
+          console.error("Error processing PDF:", error);
+  
+          // OpenAI APIキーが無効な場合のエラーハンドリング
+          if (error.message.includes("401")) {
+            setErrorMessage("無効なAPIキーが提供されました。正しいAPIキーを入力してください。");
+          } else {
+            setErrorMessage("PDFの処理中にエラーが発生しました");
+          }
+        }
+      };
+  
+      fileReader.onerror = (error) => {
+        console.error("Error reading file:", error);
+        setErrorMessage("ファイルの読み込みに失敗しました");
+      };
+    } catch (error) {
+      console.error("Error in onFileSubmit:", error);
+      setErrorMessage("エラーが発生しました");
+    } finally {
+      setLoading(false);  // 処理終了後に読み込み状態を解除
+    }
   }
+  
+  
+    
+  
 
   return (
     <Box sx={{ mt: 4 }}>
@@ -139,45 +212,67 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
       </Card>
 
       {/* ファイル送信フォーム */}
-      <Box component="form" onSubmit={handleSubmitFile(onFileSubmit)} sx={{ mb: 4 }}>
-        <Typography variant="h6">PDF 読み込みフォーム</Typography>
-        <TextField
-          label="OPENAI API KEY"
-          type="password"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)} // Separate state for API Key
-          fullWidth
-          sx={{ mb: 2 }}
-        />
-
-          {/* PDFファイル入力 */}
-          <FormControl error={!!errors.pdfFile}>
-            <FormLabel>PDFファイル</FormLabel>
-            <TextField type="file" inputProps={{ accept: ".pdf" }} {...register("pdfFile")} />
-            {errors.pdfFile && <FormHelperText>{errors.pdfFile.message}</FormHelperText>}
-          </FormControl>
-
-          {/* 質問内容を入力 */} 
+      <Form {...form}>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6">PDF 読み込みフォーム</Typography>
           <TextField
-            label="質問内容を入力"
-            type="text"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)} // Separate state for API Key
+            {...register("apiKey", { required: "APIキーを入力してください" })}
+            label="OPENAI API KEY"
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)} // Separate state for API Key
             fullWidth
             sx={{ mb: 2 }}
           />
 
-          {/* 送信ボタン */}
-          <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }} disabled={loading}>
-            {loading ? <CircularProgress size={24} /> : "送信"}
-          </Button>
+            {/* PDFファイル入力 */}
+            <FormControl error={!!errors.pdfFile}>
+              <FormLabel>PDFファイル</FormLabel>
+              <TextField type="file" inputProps={{ accept: ".pdf" }} {...register("pdfFile")} />
+              {errors.pdfFile && <FormHelperText>{errors.pdfFile.message}</FormHelperText>}
+            </FormControl>
 
-          {/* 成功メッセージ */}
-          {responseMessage && <Alert severity="success" sx={{ mt: 2 }}>{responseMessage}</Alert>}
+            {/* 質問内容を入力 */} 
+            <TextField
+              {...register("question", { required: "質問を入力してください" })}
+              label="質問内容を入力"
+              type="text"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)} // Separate state for API Key
+              fullWidth
+              sx={{ mb: 2 }}
+            />
 
-          {/* エラーメッセージ */}
-          {errorMessage && <Alert severity="error" sx={{ mt: 2 }}>{errorMessage}</Alert>}
-        </Box>
+            {/* 送信ボタン */}
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ mt: 2 }}
+              disabled={loading}
+              onClick={(e) => {
+                e.preventDefault();
+                console.log("Button clicked");
+                handleSubmitFile(
+                  async (values) => {
+                    console.log("Form submitted with values:", values);
+                    await onFileSubmit(values);
+                  },
+                  (errors) => {
+                    console.log("Validation errors:", errors);
+                  }
+                )();
+              }}
+            >
+              {loading ? <CircularProgress size={24} /> : "送信"}
+            </Button>
+
+            {/* 成功メッセージ */}
+            {responseMessage && <Alert severity="success" sx={{ mt: 2 }}>{responseMessage}</Alert>}
+
+            {/* エラーメッセージ */}
+            {errorMessage && <Alert severity="error" sx={{ mt: 2 }}>{errorMessage}</Alert>}
+          </Box>
+        </Form>
         <p>{text}</p>
       </Box>
       
