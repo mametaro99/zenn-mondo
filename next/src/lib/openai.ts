@@ -11,16 +11,23 @@ export async function openAiApi(
 ) {
   const llm = new OpenAI({
     openAIApiKey: apiKey,
+    temperature: 0.7, // 創造性の調整 (0.7はバランスが取れている)
+    maxTokens: 2000, // 最大出力トークン数
   });
+
   const embeddings = new OpenAIEmbeddings({
     openAIApiKey: apiKey,
   });
+
   const store = await MemoryVectorStore.fromDocuments(output, embeddings);
   const relevantDocs = await store.similaritySearch(question);
-  const chain = loadQAMapReduceChain(llm);
+  const chain = loadQAMapReduceChain(llm, {
+  });
+
   const res = await chain.call({
     input_documents: relevantDocs,
     question,
   });
+
   return res;
 }
