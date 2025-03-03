@@ -76,13 +76,27 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
   
       const data = await res.json();
       const split_str = await textSplitter(data.text);
-      if (!process.env.OPENAPI_KEY) {
+      console.log(split_str)
+      if (!process.env.NEXT_PUBLIC_OPENAPI_KEY) {
         throw new Error("OpenAI API key is not defined");
       }
 
 
-      question = "ここにプロンプトを記載"
-      const openAiResponse = await openAiApi(process.env.OPENAPI_KEY, question, split_str);
+      const question = `論文に記載されている心理テストの質問項目を抽出してください。それぞれの質問項目は以下のJSON形式で出力してください。
+
+      {
+        "questions": [
+          {
+            "question_text": "質問内容",
+            "is_reversed_score": trueまたはfalse
+          }
+        ]
+      }
+
+      - question_text には質問内容をそのまま記載してください。
+      - is_reversed_score には、その質問がスコア計算時に反転させる必要がある場合は true、そうでない場合は false を設定してください。`;
+
+      const openAiResponse = await openAiApi(process.env.NEXT_PUBLIC_OPENAPI_KEY, question, split_str);
       
       console.log(openAiResponse)
       setText(openAiResponse.text);
