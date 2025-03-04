@@ -186,6 +186,7 @@ const CurrentTestEdit: NextPage = () => {
             <QuestionFormList
               questions={questions}
               questionManager={questionManager}
+              title={test.title}
               onDelete={handleDeleteQuestion}
             />
           </Box>
