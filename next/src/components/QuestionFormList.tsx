@@ -15,6 +15,7 @@ type QuestionProps = {
 interface QuestionFormListProps {
   questions: QuestionProps[];
   questionManager: any;
+  title :string;
   onDelete: (id: number) => void;
 }
 
@@ -27,7 +28,7 @@ const fileSchema = z.object({
 });
 
 
-const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, questionManager, onDelete }) => {
+const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, questionManager, title ,onDelete }) => {
   // react-hook-form setup
 
   const {
@@ -82,19 +83,20 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
       }
 
 
-      const question = `論文に記載されている心理テストの質問項目を抽出してください。それぞれの質問項目は以下のJSON形式で出力してください。
+      const question = `${title}の論文で使われているテストを抽出し、各質問項目は以下のJSON形式で出力して
 
       {
         "questions": [
           {
-            "question_text": "質問内容",
-            "is_reversed_score": trueまたはfalse
+            "question_text": "私が持っている信念は頻繁に変わる",
+            "is_reversed_score": true
           }
         ]
       }
 
-      - question_text には質問内容をそのまま記載してください。
-      - is_reversed_score には、その質問がスコア計算時に反転させる必要がある場合は true、そうでない場合は false を設定してください。`;
+
+      - question_text には論文に記載されている各質問項目を日本語で記載
+      - is_reversed_score には、その質問がスコア計算時に反転させる必要がある場合は true、そうでない場合は false`;
 
       const openAiResponse = await openAiApi(process.env.NEXT_PUBLIC_OPENAPI_KEY, question, split_str);
       
