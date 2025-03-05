@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { Box, Button, TextField, Typography, FormControl, FormLabel, FormHelperText, Input, Card, CardContent, Switch, CircularProgress, Alert } from "@mui/material";
+import { Box, Button, TextField, Typography, FormControl, FormLabel, FormHelperText, Card, CardContent, Switch, CircularProgress, Alert } from "@mui/material";
 import { Form, useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { textSplitter } from "@/lib/textSplitter";
-import { openAiApi } from "@/lib/openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 type QuestionProps = {
   id: number;
@@ -20,9 +19,14 @@ interface QuestionFormListProps {
 }
 
 
+const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error("NEXT_PUBLIC_GEMINI_API_KEY is not defined");
+}
+const genAI = new GoogleGenerativeAI(apiKey);
 
 const fileSchema = z.object({
-  pdfFile: z.custom<FileList>().refine((file) => file && file.length !== 0, {
+  imageFile: z.custom<FileList>().refine((file) => file && file.length !== 0, {
     message: "ファイルが選択されていません",
   }),
 });
@@ -40,12 +44,11 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
   const [loading, setLoading] = useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [text, setText] = useState<string>("");
 
   const form = useForm<z.infer<typeof fileSchema>>({
     resolver: zodResolver(fileSchema),
     defaultValues: {
-      pdfFile: undefined,
+      imageFile: undefined,
     },
   });
 
@@ -56,31 +59,16 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
       setResponseMessage(null);
       setErrorMessage(null);
   
-      if (!values.pdfFile || values.pdfFile.length === 0) {
-        throw new Error("PDFファイルが選択されていません");
+      if (!values.imageFile || values.imageFile.length === 0) {
+        throw new Error("画像ファイルが選択されていません");
       }
   
-      const file = values.pdfFile[0];
-      const pdfBuffer = await file.arrayBuffer();
-  
-      const res = await fetch("/api/readpdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ pdfBuffer: Array.from(new Uint8Array(pdfBuffer)) }),
-      });
-  
-      if (!res.ok) {
-        throw new Error(`Failed to process PDF: ${res.statusText}`);
-      }
-  
-      const data = await res.json();
-      const split_str = await textSplitter(data.text);
-      console.log(split_str)
-      if (!process.env.NEXT_PUBLIC_OPENAPI_KEY) {
-        throw new Error("OpenAI API key is not defined");
-      }
+      const file = values.imageFile[0];
+      
+      const imageBuffer = await file.arrayBuffer();
+      const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 
       const question = `${title}の論文で使われているテストを抽出し、各質問項目は以下のJSON形式で出力して
@@ -97,12 +85,32 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
 
       - question_text には論文に記載されている各質問項目を日本語で記載
       - is_reversed_score には、その質問がスコア計算時に反転させる必要がある場合は true、そうでない場合は false`;
-
-      const openAiResponse = await openAiApi(process.env.NEXT_PUBLIC_OPENAPI_KEY, question, split_str);
       
-      console.log(openAiResponse)
-      setText(openAiResponse.text);
-      setResponseMessage("PDFが正常に処理されました");
+      const parts = [
+        { text: question },
+        {
+          inlineData: { mimeType: "image/jpeg", data: imageBase64 },
+        },
+      ];
+      
+      const result = await model.generateContent(parts);
+      const response = await result.response;
+      const responseText = response.text();
+
+      const jsonStartIndex = responseText.indexOf('{');
+      const jsonEndIndex = responseText.lastIndexOf('}') + 1;
+      const jsonString = responseText.substring(jsonStartIndex, jsonEndIndex);
+      const parsedResponse = JSON.parse(jsonString);
+      const questionsWithId = parsedResponse.questions.map((q: { question_text: string, is_reversed_score: boolean }) => ({
+        id: Math.random().toString(36).substring(2, 15), // ランダムなIDを生成
+        question_text: q.question_text,
+        isReversedScore: q.is_reversed_score,
+      }));
+
+
+      questionManager.setCreatingBulkQuestions(questionsWithId);
+      questionManager.setIsGeminiSucsess(true);
+      setResponseMessage("画像が正常に処理されました");
     } catch (error) {
       console.error("Error:", error);
       setErrorMessage(error.message || "処理中にエラーが発生しました");
@@ -193,18 +201,18 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
       </Card>
 
       {/* ファイル送信フォーム */}
-      <Form {...form}>
+      <form onSubmit={form.handleSubmit(onFileSubmit)}>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h6">PDF 読み込みフォーム</Typography>
+          <Typography variant="h6">画像 読み込みフォーム</Typography>
 
-          <FormControl error={!!errors.pdfFile}>
-            <FormLabel>PDFファイル</FormLabel>
+          <FormControl error={!!errors.imageFile}>
+            <FormLabel>画像ファイル</FormLabel>
             <TextField
               type="file"
-              inputProps={{ accept: ".pdf" }}
-              {...register("pdfFile")}
+              inputProps={{ accept: ".pdf, .png, .jpeg, .jpg" }}
+              {...register("imageFile")}
             />
-            {errors.pdfFile && <FormHelperText>{errors.pdfFile.message}</FormHelperText>}
+            {errors.imageFile && <FormHelperText>{errors.imageFile.message}</FormHelperText>}
           </FormControl>
 
 
@@ -219,13 +227,50 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
             {loading ? <CircularProgress size={24} /> : "送信"}
           </Button>
 
-          {responseMessage && <Alert severity="success" sx={{ mt: 2 }}>{responseMessage}</Alert>}
+          {responseMessage && questionManager.isGeminiSucsess && <Alert severity="success" sx={{ mt: 2 }}>{responseMessage}</Alert>}
           {errorMessage && <Alert severity="error" sx={{ mt: 2 }}>{errorMessage}</Alert>}
         </Box>
-      </Form>
-            
-        <p>{text}</p>
+      </form>
+      {/* レスポンスが成功した場合は、一括送信するフォームを作成。各質問はユーザが削除・編集することもできる */}
+      {questionManager.isGeminiSucsess && (
+        <form>
+          {questionManager.creatingBulkQuestions.map((question: QuestionProps, index: number) => (
+            <Card key={question.id} sx={{ mb: 2 }}>
+              <CardContent>      
+                <Box>
+                  <Typography variant="h6">
+                    {index + 1}. {question.question_text}
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Typography>スコア反転: {question.isReversedScore ? "あり" : "なし"}</Typography>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <Button
+                        onClick={() => questionManager.handleDeleteBulkedQuestion(question.id)}
+                        color="error"
+                        variant="contained"
+                      >
+                        削除
+                      </Button>
+                    </Box>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          ))}
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+            disabled={loading}
+            type="button"
+            onClick={questionManager.handleBulkCreateQuestions}
+          >
+            {loading ? <CircularProgress size={24} /> : "送信"}
+          </Button>
+        </form>
+      )}
       </Box>
+
       
   );
 };
