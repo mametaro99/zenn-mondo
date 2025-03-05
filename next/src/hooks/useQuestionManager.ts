@@ -3,13 +3,23 @@ import axios from "axios";
 import { useSnackbarState } from "@/hooks/useGlobalState";
 import { useRouter } from "next/router";
 
+
+type BulkedQuestionProps = {
+  id:string,
+  question_text: string;
+  isReversedScore: boolean;
+};
+
+
 export const useQuestionManager = (id: string, mutate: () => void) => {
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
   const [editingQuestionText, setEditingQuestionText] = useState<string>("");
   const [editingisRevercedScore, setEditingisRevercedScore] = useState<boolean>(false);
   const [creatingQuestionText, setCreatingQuestionText] = useState<string>("");
   const [creatingisRevercedScore, setCreatingisRevercedScore] = useState<boolean>(false);
+  const [creatingBulkQuestions, setCreatingBulkQuestions] = useState<BulkedQuestionProps[]>([]);
   const [headers, setHeaders] = useState<any>({});
+  const [isGeminiSucsess, setIsGeminiSucsess] = useState<boolean>(false);
 
   const [, setSnackbar] = useSnackbarState();
   const router = useRouter();
@@ -74,6 +84,30 @@ export const useQuestionManager = (id: string, mutate: () => void) => {
     }
   };
 
+  const handleBulkCreateQuestions = async () => {
+    try {
+      const questions = creatingBulkQuestions.map((question) => {
+        const { id, ...rest } = question;
+        return rest;
+      });
+      await axios.post(`${url}/bulk_question_create`, {
+        questions,
+      }, { headers });
+
+      setSnackbar({ message: "質問を一括作成しました", severity: "success", pathname: router.pathname });
+      mutate();
+      resetCreate();
+      setIsGeminiSucsess(false);
+    } catch (err) {
+      setSnackbar({ message: "質問の一括作成に失敗しました", severity: "error", pathname: router.pathname });
+    }
+  };
+
+  const handleDeleteBulkedQuestion = async (id: string) => {
+    const filteredQuestions = creatingBulkQuestions.filter((q) => q.id !== id);
+    setCreatingBulkQuestions(filteredQuestions);
+  }
+
   const resetEdit = () => {
     setEditingQuestionId(null);
     setEditingQuestionText("");
@@ -91,14 +125,20 @@ export const useQuestionManager = (id: string, mutate: () => void) => {
     editingisRevercedScore,
     creatingQuestionText,
     creatingisRevercedScore,
+    creatingBulkQuestions,
+    isGeminiSucsess,
     setEditingQuestionText,
     setEditingisRevercedScore,
     setCreatingQuestionText,
     setCreatingisRevercedScore,
+    setCreatingBulkQuestions,
+    setIsGeminiSucsess,
     handleQuestion,
     handleSaveQuestion,
     handleCreateQuestion,
     handleDeleteQuestion,
+    handleBulkCreateQuestions,
+    handleDeleteBulkedQuestion,
     resetEdit,
     resetCreate,
   };
