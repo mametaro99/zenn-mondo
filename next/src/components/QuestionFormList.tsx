@@ -204,7 +204,7 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
       <form onSubmit={form.handleSubmit(onFileSubmit)}>
         <Box>
           <Typography variant="h6">自動質問作成フォーム</Typography>
-          <Typography component="p">テストの各質問項目が書かれた画像をアップロードし、送信ボタンを押すと自動で質問が作成されます。</Typography>
+          <Typography component="p">テストの各質問項目が書かれた画像をアップロードし、送信ボタンを押すと読み込んだ画像をもとに自動で質問が作成されます。</Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <FormControl error={!!errors.imageFile}>
               <TextField
