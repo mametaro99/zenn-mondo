@@ -110,7 +110,7 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
 
       questionManager.setCreatingBulkQuestions(questionsWithId);
       questionManager.setIsGeminiSucsess(true);
-      setResponseMessage("画像が正常に処理されました");
+      setResponseMessage("画像が正常に処理されました。以下では読み込んだ画像から作成された質問が表示されており、最下部の送信ボタンを押すことで一括で質問を登録することができます。");
     } catch (error) {
       console.error("Error:", error);
       setErrorMessage(error.message || "処理中にエラーが発生しました");
@@ -202,33 +202,43 @@ const QuestionFormList: React.FC<QuestionFormListProps> = ({ questions, question
 
       {/* ファイル送信フォーム */}
       <form onSubmit={form.handleSubmit(onFileSubmit)}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6">画像 読み込みフォーム</Typography>
+        <Box>
+          <Typography variant="h6">自動質問作成フォーム</Typography>
+          <Typography component="p">テストの各質問項目が書かれた画像をアップロードし、送信ボタンを押すと自動で質問が作成されます。</Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <FormControl error={!!errors.imageFile}>
+              <TextField
+                type="file"
+                inputProps={{ accept: ".pdf, .png, .jpeg, .jpg" }}
+                {...register("imageFile")}
+                sx={{ mt: 2, maxWidth: 350 }}
+              />
+              {errors.imageFile && <FormHelperText>{errors.imageFile.message}</FormHelperText>}
+            </FormControl>
 
-          <FormControl error={!!errors.imageFile}>
-            <FormLabel>画像ファイル</FormLabel>
-            <TextField
-              type="file"
-              inputProps={{ accept: ".pdf, .png, .jpeg, .jpg" }}
-              {...register("imageFile")}
-            />
-            {errors.imageFile && <FormHelperText>{errors.imageFile.message}</FormHelperText>}
-          </FormControl>
-
-
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
-            disabled={loading}
-            type="submit" // Use submit type to trigger the form submission
-            onClick={handleSubmitFile(onFileSubmit)} // Add onClick handler to trigger onFileSubmit
-            >
-            {loading ? <CircularProgress size={24} /> : "送信"}
-          </Button>
-
-          {responseMessage && questionManager.isGeminiSucsess && <Alert severity="success" sx={{ mt: 2 }}>{responseMessage}</Alert>}
-          {errorMessage && <Alert severity="error" sx={{ mt: 2 }}>{errorMessage}</Alert>}
+            <Button
+                variant="contained"
+                color="primary"
+                sx={{ display: "inline-block", mt: 2 }}
+                disabled={loading}
+                onClick={handleSubmitFile(onFileSubmit)}
+                type="submit"
+              >
+                {loading ? <CircularProgress size={24} /> : "送信"}
+            </Button>
+          </Box>
+        </Box>
+        <Box>
+          {responseMessage && questionManager.isGeminiSucsess && (
+            <Alert severity="success" sx={{ ml: 2 }}>
+            {responseMessage}
+            </Alert>
+          )}
+          {errorMessage && (
+            <Alert severity="error" sx={{ ml: 2 }}>
+            {errorMessage}
+            </Alert>
+          )}
         </Box>
       </form>
       {/* レスポンスが成功した場合は、一括送信するフォームを作成。各質問はユーザが削除・編集することもできる */}
