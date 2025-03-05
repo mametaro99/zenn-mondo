@@ -23,9 +23,12 @@ Rails.application.routes.draw do
       end
 
       namespace :current do
-        resources :tests, only: [:index, :show, :create, :update, :destroy, :bulk_question_create] do
+        resources :tests, only: [:index, :show, :create, :update, :destroy] do
           collection do
             get :admin_index
+          end
+          member do
+            post :bulk_question_create
           end
           resources :test_answers, only: [:index, :create], module: :tests do
             collection do
