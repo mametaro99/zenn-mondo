@@ -235,6 +235,90 @@ includes関数を追加することで以下のようにクエリが発行され
 改善案例（自己概念）
 ![alt text](image.png)
 
+
+### 3.管理者画面にて、テストの質問項目を画像から自動抽出
+
+科学者が研究で使われているテストを編集する画面にて、質問項目を画像から自動で抽出する機能を開発しました。
+
+今までは、手動で質問項目を編集していたため、画像から自動で質問項目を抽出することで、科学者の入力の手間を減らすことができます。
+
+#### 具体的な流れ
+
+1. ファイルのアップロード
+以下のファイルフォームにて、研究で使用されているテストの質問内容の一覧が記載されてある画像を添付します。
+
+![alt text](fileForm.png)
+
+ここでは、以下のようにテストの質問項目が書かれた画像を添付することを想定しています。
+
+![alt text](test-question.png)
+
+2. 画像をエンコードして、Geminiにプロンプト(出力してほしい文章)とエンコードした画像情報を渡す。
+
+添付されたファイルについて、Base64で画像をテキストの情報にエンコードしてGeminiに渡せるようにします。
+
+[Geminiでは、以下の主に２つの方法を使って20MB以下の画像のアップロードを行うことができます。](https://ai.google.dev/gemini-api/docs/vision?hl=ja&lang=python#prompting-images)
+
+- ローカルの画像を直接アップロードする
+- 画像をBase64でエンコードしてアップロードする。
+
+今回は、サーバ（Rails）側への通信や画像をローカル環境にアップロードする手間を省き、直接Next.jsからGeminiAPIへの通信を仕様と考えていたため、画像をBase64でエンコードしてアップロードする方法を取りました。
+
+受け取った画像をBase64でエンコードする方法は以下のコードのようになっています。
+
+
+```TypeScript
+const file = values.imageFile[0];
+const imageBuffer = await file.arrayBuffer();
+const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+```
+
+また、Base64でエンコードした画像データを以下のようにプロンプトに含めてGeminiAPIに渡す処理は以下のようになっています。
+
+ここでは、質問内容などの各属性を決まったJSON形式のフォーマットで返すようにプロンプトに指示文書いています。
+
+```TypeScript
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+const question = `${title}の論文で使われているテストを抽出し、各質問項目は以下のJSON形式で出力して
+
+{
+  "questions": [
+    {
+      "question_text": "私が持っている信念は頻繁に変わる",
+      "is_reversed_score": true
+    }
+  ]
+}
+
+
+- question_text には論文に記載されている各質問項目を日本語で記載
+- is_reversed_score には、その質問がスコア計算時に反転させる必要がある場合は true、そうでない場合は false`;
+
+const parts = [
+  { text: question },
+  {
+    inlineData: { mimeType: "image/jpeg", data: imageBase64 },
+  },
+];
+
+const result = await model.generateContent(parts);
+const response = await result.response;
+```
+
+3. 受け取ったプロンプトを画面に表示して、質問を登録できるようにする。
+
+GeminiAPIが画像を解析して、テストの質問項目を抽出してクライアントサイドに結果を返すと、画面に正しく抽出された質問項目が表示されます。
+
+![alt text](after-question.png)
+
+また、抽出した質問が正しいかどうかを確認したうえで、画面下部にある送信ボタンを押すと、抽出したすべての質問項目が登録されます。
+
+![alt text](button.png)
+
+このようにして、本来は手動入力が必要で不便だった管理者画面の質問項目の登録について、GeminiAPIを使って画像から質問を自動抽出することで、登録する手間を減らすことができました。
+
+
 ## データベース設計
 
 以下は、このアプリのデータベース設計となっています。
