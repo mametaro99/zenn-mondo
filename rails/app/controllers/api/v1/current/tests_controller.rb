@@ -1,7 +1,7 @@
 class Api::V1::Current::TestsController < Api::V1::BaseController
   include Pagination
   before_action :authenticate_user!, only: [:index]
-  before_action :authenticate_admin!, only: [:admin_index, :show, :create, :update, :destroy,:bulk_question_create] 
+  before_action :authenticate_admin!, only: [:admin_index, :show, :create, :update, :destroy, :bulk_question_create] 
 
 
   # ログインしたユーザが受けたテストの一覧を返す
@@ -29,8 +29,9 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
   def bulk_question_create
     questions = params.require(:questions).map do |question_params|
       Question.create!(
+        test_id: params[:id],
         question_text: question_params[:question_text],
-        reverse_scoring: question_params[:reverse_scoring]
+        isReversedScore: question_params[:isReversedScore]
       )
     end
 
@@ -75,7 +76,7 @@ class Api::V1::Current::TestsController < Api::V1::BaseController
 
   def questions_params
     params.require(:questions).map do |question|
-      question.permit(:question_text, :reverse_scoring)
+      question.permit(:question_text, :isReversedScore)
     end
   end
 end
