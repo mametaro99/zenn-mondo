@@ -1,0 +1,44 @@
+# ビルドステージ
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# 依存関係ファイルをコピー
+COPY next/package*.json ./
+
+# 依存関係のインストール
+RUN npm ci
+
+# ソースコードをコピー
+COPY next/ ./
+
+# 環境変数を設定
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_PUBLIC_GEMINI_API_KEY dummy-key-for-build
+
+# ESLintを完全に無効化してビルド
+RUN npx next telemetry disable
+RUN npm run build --no-lint
+
+# 実行ステージ
+FROM node:18-alpine AS runner
+
+WORKDIR /app
+
+# 本番環境用の依存関係のみをインストール
+COPY next/package*.json ./
+RUN npm ci --only=production
+
+# ビルドステージからビルド済みのアプリケーションをコピー
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# 環境変数を設定
+ENV NODE_ENV production
+ENV PORT 3000
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# アプリケーションを実行
+CMD ["npm", "start"]
