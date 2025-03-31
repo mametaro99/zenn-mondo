@@ -1,0 +1,29 @@
+FROM ruby:3.1.2
+
+# Install dependencies
+RUN apt-get update -qq && apt-get install -y nodejs default-mysql-client
+
+# Set working directory
+WORKDIR /app
+
+# Copy Gemfile and Gemfile.lock
+COPY rails/Gemfile rails/Gemfile.lock ./
+
+# Install gems
+RUN bundle install
+
+# Copy the rest of the application
+COPY rails .
+
+# Set environment variables
+ENV RAILS_ENV=production
+ENV RAILS_SERVE_STATIC_FILES=true
+ENV RAILS_LOG_TO_STDOUT=true
+
+# Skip asset precompilation since this is an API-only Rails app
+
+# Expose port 3000
+EXPOSE 3000
+
+# Start the server
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
