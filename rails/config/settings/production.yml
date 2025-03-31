@@ -1,1 +1,1 @@
-front_domain: <%= ENV['FRONT_DOMAIN'] || "http://zenn-clone-alb-frontend-400965616.us-east-1.elb.amazonaws.com" %>
+front_domain: "http://ZennMo-ZennM-TvhjwDMmd5sI-2146470207.ap-northeast-1.elb.amazonaws.com"
