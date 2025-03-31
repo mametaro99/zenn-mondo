@@ -7,7 +7,8 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins Settings.front_domain
+    # Allow requests from any origin
+    origins '*'
 
     resource "*",
              headers: :any,
