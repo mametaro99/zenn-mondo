@@ -36,7 +36,7 @@ export class ZennMondoInfraStack extends cdk.Stack {
     // Create ECS Cluster
     const cluster = new ecs.Cluster(this, 'ZennMondoCluster', {
       vpc,
-      clusterName: 'zenn-mondo-cluster',
+      clusterName: 'zenn-mondo-cluster-new',
     });
 
     // Create security groups
@@ -197,7 +197,7 @@ export class ZennMondoInfraStack extends cdk.Stack {
 
     testListener.addAction('ApiAction', {
       conditions: [
-        elbv2.ListenerCondition.pathPatterns(['/api/*']),
+        elbv2.ListenerCondition.pathPatterns(['/api/v1/*']),
       ],
       priority: 10,
       action: elbv2.ListenerAction.forward([backendTargetGroup]),
