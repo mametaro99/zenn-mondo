@@ -408,6 +408,66 @@ erDiagram
 
 [【独学ポートフォリオ開発応援】実務未経験から学べる！Rails×Next.js×AWSハンズオン解説](https://zenn.dev/ddpmntcpbr/books/rna-hands-on)
 
+## AWS CDKによるデプロイ方法
+
+このアプリケーションはAWS CDKを使用してECRとECS Fargateにデプロイできます。
+
+### 前提条件
+
+- AWS CLIがインストールされていること
+- AWS CDKがインストールされていること
+- AWSの認証情報が設定されていること
+
+### デプロイ手順
+
+1. リポジトリをクローンする
+```bash
+git clone https://github.com/your-username/zenn-mondo.git
+cd zenn-mondo
+```
+
+2. デプロイスクリプトを実行する
+```bash
+./deploy.sh
+```
+
+このスクリプトは以下の処理を行います：
+- AWS CDKを使用してインフラストラクチャをデプロイ
+- ECRリポジトリにDockerイメージをビルドしてプッシュ
+- ECSサービスを更新して新しいイメージをデプロイ
+
+### 手動でのデプロイ
+
+1. CDKスタックをデプロイ
+```bash
+cd zenn-mondo-infra
+npm run build
+cdk deploy
+```
+
+2. ECRリポジトリにログイン
+```bash
+aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin YOUR_ECR_REPO_URI
+```
+
+3. バックエンドイメージをビルドしてプッシュ
+```bash
+docker build -t YOUR_BACKEND_REPO_URI:latest -f Dockerfile.backend .
+docker push YOUR_BACKEND_REPO_URI:latest
+```
+
+4. フロントエンドイメージをビルドしてプッシュ
+```bash
+docker build -t YOUR_FRONTEND_REPO_URI:latest -f Dockerfile.frontend .
+docker push YOUR_FRONTEND_REPO_URI:latest
+```
+
+5. ECSサービスを更新
+```bash
+aws ecs update-service --cluster zenn-mondo-cluster --service BackendService --force-new-deployment
+aws ecs update-service --cluster zenn-mondo-cluster --service FrontendService --force-new-deployment
+```
+
 
 ## 論文PDFを生成系AIに渡して、質問を自動生成
 
