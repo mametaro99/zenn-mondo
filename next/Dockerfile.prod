@@ -35,6 +35,10 @@
   # Set the environment variable for Next.js
   ENV NODE_ENV production
   
+  # Set environment variables for API endpoints - hardcoded to ensure they're used
+  ENV NEXT_PUBLIC_API_BASE_URL=http://ZennMo-ZennM-TvhjwDMmd5sI-2146470207.ap-northeast-1.elb.amazonaws.com/api/v1
+  ENV NEXT_PUBLIC_FRONT_BASE_URL=http://ZennMo-ZennM-TvhjwDMmd5sI-2146470207.ap-northeast-1.elb.amazonaws.com
+  
   # Expose the port the app runs on
   EXPOSE 80
   
