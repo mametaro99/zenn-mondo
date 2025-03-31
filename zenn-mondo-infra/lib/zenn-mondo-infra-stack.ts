@@ -124,7 +124,10 @@ export class ZennMondoInfraStack extends cdk.Stack {
       environment: {
         RAILS_ENV: 'production',
         RAILS_LOG_TO_STDOUT: 'true',
-        // Add other environment variables as needed
+        // The front_domain will be set dynamically based on the ALB DNS
+        FRONT_DOMAIN: cdk.Fn.sub('http://${LoadBalancer}', {
+          LoadBalancer: alb.loadBalancerDnsName,
+        }),
       },
       portMappings: [{ containerPort: 3000 }],
     });
@@ -145,7 +148,14 @@ export class ZennMondoInfraStack extends cdk.Stack {
       }),
       environment: {
         NODE_ENV: 'production',
-        // Add other environment variables as needed
+        // Set API base URL dynamically based on the ALB DNS
+        NEXT_PUBLIC_API_BASE_URL: cdk.Fn.sub('http://${LoadBalancer}/api/v1', {
+          LoadBalancer: alb.loadBalancerDnsName,
+        }),
+        // Set frontend base URL dynamically based on the ALB DNS
+        NEXT_PUBLIC_FRONT_BASE_URL: cdk.Fn.sub('http://${LoadBalancer}', {
+          LoadBalancer: alb.loadBalancerDnsName,
+        }),
       },
       portMappings: [{ containerPort: 3000 }],
     });
