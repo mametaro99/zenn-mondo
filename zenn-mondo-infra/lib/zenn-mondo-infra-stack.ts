@@ -157,7 +157,7 @@ export class ZennMondoInfraStack extends cdk.Stack {
       protocol: elbv2.ApplicationProtocol.HTTP,
       targetType: elbv2.TargetType.IP,
       healthCheck: {
-        path: '/api/v1/health',
+        path: '/api/v1/health_check',
         interval: cdk.Duration.seconds(60),
         timeout: cdk.Duration.seconds(5),
         healthyHttpCodes: '200',
@@ -170,7 +170,7 @@ export class ZennMondoInfraStack extends cdk.Stack {
       protocol: elbv2.ApplicationProtocol.HTTP,
       targetType: elbv2.TargetType.IP,
       healthCheck: {
-        path: '/',
+        path: '/api/health_check',
         interval: cdk.Duration.seconds(60),
         timeout: cdk.Duration.seconds(5),
         healthyHttpCodes: '200',
