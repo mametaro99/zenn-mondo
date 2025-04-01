@@ -124,10 +124,10 @@ export class ZennMondoInfraStack extends cdk.Stack {
       environment: {
         RAILS_ENV: 'production',
         RAILS_LOG_TO_STDOUT: 'true',
-        // The front_domain will be set dynamically based on the ALB DNS
-        FRONT_DOMAIN: cdk.Fn.sub('http://${LoadBalancer}', {
-          LoadBalancer: alb.loadBalancerDnsName,
-        }),
+        // The front_domain will be set dynamically based on the ALB DNS - using direct string interpolation to preserve case
+        FRONT_DOMAIN: `http://${alb.loadBalancerDnsName}`,
+        // Adding consistent environment variable that matches frontend naming
+        FRONT_BASE_URL: `http://${alb.loadBalancerDnsName}`,
       },
       portMappings: [{ containerPort: 3000 }],
     });
@@ -148,14 +148,12 @@ export class ZennMondoInfraStack extends cdk.Stack {
       }),
       environment: {
         NODE_ENV: 'production',
-        // Set API base URL dynamically based on the ALB DNS
-        NEXT_PUBLIC_API_BASE_URL: cdk.Fn.sub('http://${LoadBalancer}/api/v1', {
-          LoadBalancer: alb.loadBalancerDnsName,
-        }),
-        // Set frontend base URL dynamically based on the ALB DNS
-        NEXT_PUBLIC_FRONT_BASE_URL: cdk.Fn.sub('http://${LoadBalancer}', {
-          LoadBalancer: alb.loadBalancerDnsName,
-        }),
+        // Set API base URL dynamically based on the ALB DNS - using direct string interpolation to preserve case
+        NEXT_PUBLIC_API_BASE_URL: `http://${alb.loadBalancerDnsName}/api/v1`,
+        // Set frontend base URL dynamically based on the ALB DNS - using direct string interpolation to preserve case
+        NEXT_PUBLIC_FRONT_BASE_URL: `http://${alb.loadBalancerDnsName}`,
+        // Adding consistent environment variable that matches backend naming
+        FRONT_DOMAIN: `http://${alb.loadBalancerDnsName}`,
       },
       portMappings: [{ containerPort: 3000 }],
     });
