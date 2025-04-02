@@ -468,6 +468,14 @@ aws ecs update-service --cluster zenn-mondo-cluster --service BackendService --f
 aws ecs update-service --cluster zenn-mondo-cluster --service FrontendService --force-new-deployment
 ```
 
+### ECSサービスのデプロイで苦戦したこと
+
+エンドポイントが書き変わるために、バックエンドとフロントエンドの間で元のエンドポイントが指定されて通信できないこと。
+バックエンドとフロントエンドにて、それぞれELBのエンドポイントを設定しているが、CDK実行時にELBが再構築されるため、エンドポイントが元のELBの情報を参照していて変更できない。
+![alt text](image-1.png)
+
+上記では、フロントエンドのホーム画面にてバックエンドへAPIへフェッチした際に、ERR_NAME_NOT_RESOLVEDがでています。
+フロントエンドが指定したELBのエンドポイントにアクセスしているが、デプロイ時に削除されているため、が発生している。
 
 ## 論文PDFを生成系AIに渡して、質問を自動生成
 
