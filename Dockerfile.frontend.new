@@ -15,6 +15,7 @@ COPY next/ ./
 # 環境変数を設定
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NEXT_PUBLIC_GEMINI_API_KEY dummy-key-for-build
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 # ESLintを完全に無効化してビルド
 RUN npx next telemetry disable
@@ -39,6 +40,10 @@ COPY --from=builder /app/package.json ./package.json
 ENV NODE_ENV production
 ENV PORT 3000
 ENV NEXT_TELEMETRY_DISABLED 1
+
+# ヘルスチェック用のファイルを作成
+RUN mkdir -p /app/public/api
+RUN echo '{"status":"ok"}' > /app/public/api/health_check
 
 # アプリケーションを実行
 CMD ["npm", "start"]
