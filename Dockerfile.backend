@@ -1,7 +1,13 @@
 FROM ruby:3.1.2
 
 # Install dependencies
-RUN apt-get update -qq && apt-get install -y nodejs default-mysql-client vim
+RUN apt-get update -qq && apt-get install -y nodejs default-mysql-client vim curl unzip
+
+# Install AWS CLI
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    rm -rf aws awscliv2.zip
 
 # Set working directory
 WORKDIR /app
@@ -24,8 +30,21 @@ ENV RAILS_ENV=production
 ENV RAILS_SERVE_STATIC_FILES=true
 ENV RAILS_LOG_TO_STDOUT=true
 
-# Create a script to remove server.pid and start the server
-RUN echo '#!/bin/bash\nrm -f /app/tmp/pids/server.pid\nexec bundle exec rails server -b 0.0.0.0' > /app/entrypoint.sh
+# Create a dynamic entrypoint script
+RUN echo '#!/bin/bash\n\
+# Remove server.pid if it exists\n\
+rm -f /app/tmp/pids/server.pid\n\
+\n\
+# Get the ALB DNS from SSM Parameter Store\n\
+export ALB_DNS=$(aws ssm get-parameter --name /zenn-mondo/alb-dns --query "Parameter.Value" --output text --region ${AWS_REGION:-ap-northeast-1})\n\
+\n\
+# Create dynamic production.yml with the latest ALB DNS\n\
+echo "front_domain: \"http://$ALB_DNS\"" > /app/config/settings/production.yml\n\
+\n\
+# Start the Rails server\n\
+exec bundle exec rails server -b 0.0.0.0\n\
+' > /app/entrypoint.sh
+
 RUN chmod +x /app/entrypoint.sh
 
 # Expose port 3000

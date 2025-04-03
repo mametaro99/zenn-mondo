@@ -1,0 +1,76 @@
+# ビルドステージ
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# 依存関係ファイルをコピー
+COPY next/package*.json ./
+
+# 依存関係のインストール
+RUN npm ci
+
+# ソースコードをコピー
+COPY next/ ./
+
+# 環境変数を設定
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_PUBLIC_GEMINI_API_KEY dummy-key-for-build
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
+# ESLintを完全に無効化してビルド
+RUN npx next telemetry disable
+RUN npm run build --no-lint
+
+# 実行ステージ
+FROM node:18-alpine AS runner
+
+WORKDIR /app
+
+# AWS CLIをインストール
+RUN apk add --no-cache \
+    python3 \
+    curl \
+    bash
+
+# AWS CLI v2をインストール（Alpine Linuxでの推奨方法）
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    rm -rf aws awscliv2.zip
+
+# 本番環境用の依存関係のみをインストール
+COPY next/package*.json ./
+RUN npm ci --only=production
+
+# ビルドステージからビルド済みのアプリケーションをコピー
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# 環境変数を設定
+ENV NODE_ENV production
+ENV PORT 3000
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# ヘルスチェック用のファイルを作成
+RUN mkdir -p /app/public/api
+RUN echo '{"status":"ok"}' > /app/public/api/health_check
+
+# 起動スクリプトを作成
+RUN echo '#!/bin/bash\n\
+# Get the ALB DNS from SSM Parameter Store\n\
+export ALB_DNS=$(aws ssm get-parameter --name /zenn-mondo/alb-dns --query "Parameter.Value" --output text --region ${AWS_REGION:-ap-northeast-1})\n\
+export NEXT_PUBLIC_API_BASE_URL="http://$ALB_DNS/api/v1"\n\
+export NEXT_PUBLIC_FRONT_BASE_URL="http://$ALB_DNS"\n\
+export FRONT_DOMAIN="http://$ALB_DNS"\n\
+\n\
+# Start the application\n\
+exec "$@"\n\
+' > /app/entrypoint.sh
+
+RUN chmod +x /app/entrypoint.sh
+
+# アプリケーションを実行
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["npm", "start"]
