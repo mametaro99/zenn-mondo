@@ -208,14 +208,16 @@ export class ZennMondoInfraStack extends cdk.Stack {
     frontendTg.addTarget(frontendService);
 
     // ALB Listener
-    const listener = alb.addListener('HttpListener', {
-      port: 80,
+    const httpsListener = alb.addListener('HttpsListener', {
+      port: 443,
+      protocol: elbv2.ApplicationProtocol.HTTPS,
+      certificates: [certificate],
       open: true,
       defaultAction: elbv2.ListenerAction.forward([frontendTg]),
     });
 
-    // Add API routing rule to the listener
-    listener.addAction('BackendAction', {
+    // Add API routing rule to the HTTPS listener
+    httpsListener.addAction('BackendAction', {
       priority: 10,
       conditions: [
         elbv2.ListenerCondition.pathPatterns(['/api/*']),
@@ -223,11 +225,43 @@ export class ZennMondoInfraStack extends cdk.Stack {
       action: elbv2.ListenerAction.forward([backendTg]),
     });
 
+    // HTTP Listener - Redirect to HTTPS
+    const httpListener = alb.addListener('HttpListener', {
+      port: 80,
+      open: true,
+      defaultAction: elbv2.ListenerAction.redirect({
+        protocol: 'HTTPS',
+        port: '443',
+        permanent: true,
+      }),
+    });
+
+    // Create Route53 record for the domain pointing to the ALB
+    new route53.ARecord(this, 'AliasRecord', {
+      zone: hostedZone,
+      recordName: domainName, // apex domain
+      target: route53.RecordTarget.fromAlias(new route53Targets.LoadBalancerTarget(alb)),
+    });
+
+    // Create Route53 record for www subdomain
+    new route53.ARecord(this, 'WwwAliasRecord', {
+      zone: hostedZone,
+      recordName: `www.${domainName}`,
+      target: route53.RecordTarget.fromAlias(new route53Targets.LoadBalancerTarget(alb)),
+    });
+
     // Output the ALB DNS name
     new cdk.CfnOutput(this, 'AlbDnsName', {
       value: alb.loadBalancerDnsName,
       description: 'The DNS name of the ALB',
       exportName: 'ZennMondoAlbDnsName',
+    });
+
+    // Output the domain name
+    new cdk.CfnOutput(this, 'DomainName', {
+      value: `https://${domainName}`,
+      description: 'The domain name of the application',
+      exportName: 'ZennMondoDomainName',
     });
   }
 }
