@@ -5,12 +5,30 @@ import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { Construct } from 'constructs';
 
 export class ZennMondoInfraStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // Domain name
+    const domainName = 'zenn-clone-demo.com';
+    
+    // Import the hosted zone
+    const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
+      domainName: domainName,
+    });
+    
+    // Import the existing certificate
+    const certificate = acm.Certificate.fromCertificateArn(
+      this,
+      'Certificate',
+      `arn:aws:acm:${this.region}:${this.account}:certificate/a081cad0-e4d5-424b-9e5c-9e609c666727`
+    );
+    
     // VPC
     const vpc = new ec2.Vpc(this, 'ZennMondoVpc', {
       maxAzs: 2,
@@ -24,6 +42,7 @@ export class ZennMondoInfraStack extends cdk.Stack {
       description: 'Security group for ALB',
     });
     albSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'Allow HTTP traffic');
+    albSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), 'Allow HTTPS traffic');
 
     // Security Group for ECS Tasks
     const ecsSg = new ec2.SecurityGroup(this, 'EcsSecurityGroup', {
