@@ -55,3 +55,23 @@ npx cdk deploy
 ```
 
 デプロイ後、コンテナは自動的に最新のDNS名を取得して環境変数を設定します。
+
+
+## Route53の既存のAレコードを強制的に削除
+
+以下のように新規に作成したALBのDNS名をRoute53で扱っているホストのAレコードに追加した際に、以下のようにエラーが発生した。
+
+```
+9:34:07 PM | CREATE_FAILED        | AWS::Route53::RecordSet
+| AliasRecord851000D2
+[Tried to create resource record set [name='zenn-clone-demo.com.', t
+ype='A'] but it already exists]
+
+```
+
+#### 解決方法
+
+
+以下を参照
+
+[AWS CDKで定義したAレコードを変更する](https://qiita.com/si-cover/items/17952903805b81221737)
