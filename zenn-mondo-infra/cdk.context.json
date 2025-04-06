@@ -3,5 +3,9 @@
     "ap-northeast-1a",
     "ap-northeast-1c",
     "ap-northeast-1d"
-  ]
+  ],
+  "hosted-zone:account=667785573706:domainName=zenn-clone-demo.com:region=ap-northeast-1": {
+    "Id": "/hostedzone/Z07626172I3KI3PQYUWW6",
+    "Name": "zenn-clone-demo.com."
+  }
 }
