@@ -237,10 +237,12 @@ export class ZennMondoInfraStack extends cdk.Stack {
     });
 
     // Create Route53 record for the domain pointing to the ALB
+    // Use deleteExisting: true to ensure any existing records are removed first
     new route53.ARecord(this, 'AliasRecord', {
       zone: hostedZone,
       recordName: domainName, // apex domain
       target: route53.RecordTarget.fromAlias(new route53Targets.LoadBalancerTarget(alb)),
+      deleteExisting: true, // Delete existing records before creating new ones
     });
 
     // Create Route53 record for www subdomain
@@ -248,6 +250,7 @@ export class ZennMondoInfraStack extends cdk.Stack {
       zone: hostedZone,
       recordName: `www.${domainName}`,
       target: route53.RecordTarget.fromAlias(new route53Targets.LoadBalancerTarget(alb)),
+      deleteExisting: true, // Delete existing records before creating new ones
     });
 
     // Output the ALB DNS name
