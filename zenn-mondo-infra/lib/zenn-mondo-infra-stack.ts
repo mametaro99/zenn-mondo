@@ -220,7 +220,7 @@ export class ZennMondoInfraStack extends cdk.Stack {
     httpsListener.addAction('BackendAction', {
       priority: 10,
       conditions: [
-        elbv2.ListenerCondition.pathPatterns(['/api/*']),
+        elbv2.ListenerCondition.pathPatterns(['/api/v1/*']),
       ],
       action: elbv2.ListenerAction.forward([backendTg]),
     });
