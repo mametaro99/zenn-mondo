@@ -39,7 +39,12 @@ rm -f /app/tmp/pids/server.pid\n\
 export ALB_DNS=$(aws ssm get-parameter --name /zenn-mondo/alb-dns --query "Parameter.Value" --output text --region ${AWS_REGION:-ap-northeast-1})\n\
 \n\
 # Create dynamic production.yml with the latest ALB DNS\n\
-echo "front_domain: \"http://$ALB_DNS\"" > /app/config/settings/production.yml\n\
+# Use HTTPS for zenn-clone-demo.com domain, HTTP for ALB DNS\n\
+if [[ "$ALB_DNS" == *"zenn-clone-demo.com"* ]]; then\n\
+  echo "front_domain: \"https://$ALB_DNS\"" > /app/config/settings/production.yml\n\
+else\n\
+  echo "front_domain: \"http://$ALB_DNS\"" > /app/config/settings/production.yml\n\
+fi\n\
 \n\
 # Start the Rails server\n\
 exec bundle exec rails server -b 0.0.0.0\n\
